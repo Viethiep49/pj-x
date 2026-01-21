@@ -1,0 +1,89 @@
+# --- Python Standard ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Virtual Environments (Môi trường ảo) ---
+venv/
+env/
+ENV/
+.venv/
+
+# --- Environment Variables (Quan trọng: Chứa API Key) ---
+.env
+.env.local
+.env.*.local
+
+# --- Database ---
+*.db
+*.sqlite3
+
+# --- Jupyter Notebooks ---
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# --- Node.js / Frontend ---
+node_modules/
+dist/
+build/
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- AI Agents & IDE Settings (Local AI configs) ---
+# Các file cấu hình AI local mà bạn yêu cầu
+.agents/
+.claude/
+.cursor/
+.cursorrules
+.windsurf/
+.copilot/
+chat_history/
+.history/
+
+# --- AI Models & Datasets (QUAN TRỌNG: File nặng không up lên git) ---
+# Model weights (PyTorch, TensorFlow, HuggingFace...)
+*.pt
+*.pth
+*.mdl
+*.hdf5
+*.h5
+*.ckpt
+*.safetensors
+*.onnx
+*.gguf
+*.bin
+*.pkl
+
+# Dataset folders (Nếu có tải ảnh về train/test)
+datasets/
+data/
+raw_data/
+
+# --- Project Specific (Thư mục upload) ---
+# Giữ lại thư mục nhưng bỏ qua file bên trong
+backend/static/uploads/*
+backend/static/processed/*
+backend/static/music/*
+!backend/static/uploads/.gitkeep
+!backend/static/processed/.gitkeep
+!backend/static/music/.gitkeep
