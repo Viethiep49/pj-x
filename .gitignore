@@ -59,7 +59,7 @@ yarn-error.log*
 .copilot/
 chat_history/
 .history/
-
+.shared/ 
 # --- AI Models & Datasets (QUAN TRỌNG: File nặng không up lên git) ---
 # Model weights (PyTorch, TensorFlow, HuggingFace...)
 *.pt
