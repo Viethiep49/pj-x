@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     PawPrint, Scissors, Waves, Crown, Calendar,
@@ -12,6 +12,7 @@ import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 
 const LandingPage = () => {
+    const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [selectedPackage, setSelectedPackage] = useState(null);
     const [bookingStep, setBookingStep] = useState(1);
@@ -39,56 +40,62 @@ const LandingPage = () => {
             />
 
             {/* Bubble Navigation */}
-            <nav className="fixed top-6 left-0 right-0 z-50 px-4">
-                <motion.div
-                    initial={{ y: -100 }}
-                    animate={{ y: 0 }}
-                    className="max-w-5xl mx-auto bg-white/80 backdrop-blur-md rounded-full shadow-clay-md border border-white/50 px-6 py-2 flex items-center justify-between"
+            <nav className="fixed top-6 left-0 right-0 z-50 px-6">
+    <motion.div
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="max-w-6xl mx-auto bg-white/80 backdrop-blur-md rounded-full shadow-clay-md border border-white/50 px-8 py-3 flex items-center justify-between"
+    >
+        <div className="flex items-center gap-10"> 
+            <div className="flex items-center gap-3 group cursor-pointer">
+                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-clay-sm group-hover:rotate-12 transition-transform">
+                    <PawPrint className="text-white w-6 h-6" />
+                </div>
+                <span className="font-fredoka font-bold text-2xl text-primary tracking-tight">Pawsitive</span>
+            </div>
+
+            <div className="hidden lg:flex items-center gap-8">
+                {['Services', 'Gallery', 'Reviews'].map((item) => (
+                    <a
+                        key={item}
+                        href={`#${item.toLowerCase()}`}
+                        className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors relative group"
+                    >
+                        {item}
+                        <span className="absolute -bottom-1 left-0 w-0 h-1 bg-primary rounded-full transition-all group-hover:w-full" />
+                    </a>
+                ))}
+            </div>
+        </div>
+
+        <div className="flex items-center gap-6">
+            <div className="hidden md:flex items-center gap-6 border-l border-gray-200 pl-6">
+                <Link to="/login" className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors">
+                    Log In
+                </Link>
+                <Link to="/register">
+                    <Button className="py-2.5 px-6 text-sm" variant="peach">
+                        Sign Up
+                    </Button>
+                </Link>
+            </div>
+
+            <div className="flex items-center gap-3">
+                <Link to="/booking">
+                    <Button className="hidden sm:flex py-3 px-8 text-sm" variant="primary">
+                        Book Now
+                    </Button>
+                </Link>
+                <button
+                    className="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-cream shadow-clay-sm"
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
                 >
-                    <div className="flex items-center gap-2 group cursor-pointer">
-                        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-clay-sm group-hover:rotate-12 transition-transform">
-                            <PawPrint className="text-white w-6 h-6" />
-                        </div>
-                        <span className="font-fredoka font-bold text-2xl text-primary tracking-tight">Pawsitive</span>
-                    </div>
-
-                    <div className="hidden lg:flex items-center gap-8">
-                        {['Services', 'Gallery', 'Reviews'].map((item) => (
-                            <a
-                                key={item}
-                                href={`#${item.toLowerCase()}`}
-                                className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors relative group"
-                            >
-                                {item}
-                                <span className="absolute -bottom-1 left-0 w-0 h-1 bg-primary rounded-full transition-all group-hover:w-full" />
-                            </a>
-                        ))}
-                    </div>
-
-                    <div className="hidden md:flex items-center gap-4 border-l border-gray-200 pl-6 ml-auto mr-4">
-                        <Link to="/login" className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors px-2">
-                            Log In
-                        </Link>
-                        <Link to="/register">
-                            <Button className="py-2.5 px-6 text-sm" variant="peach">
-                                Sign Up
-                            </Button>
-                        </Link>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <Button className="hidden sm:flex py-3 px-6 text-sm" variant="primary">
-                            Book Now
-                        </Button>
-                        <button
-                            className="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-cream shadow-clay-sm"
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        >
-                            {isMenuOpen ? <X /> : <Menu />}
-                        </button>
-                    </div>
-                </motion.div>
-            </nav>
+                    {isMenuOpen ? <X /> : <Menu />}
+                </button>
+            </div>
+        </div>
+    </motion.div>
+</nav>
 
             {/* Mobile Menu Overlay */}
             <AnimatePresence>
@@ -157,15 +164,16 @@ const LandingPage = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.6 }}
                             className="flex flex-wrap gap-6 justify-center lg:justify-start"
-                        >
-                            <Button className="text-xl px-10 py-6 group">
-                                Start Booking
-                                <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
-                            </Button>
-                            <Button variant="peach" className="text-xl px-10 py-6">
-                                Meet our Team
-                            </Button>
-                        </motion.div>
+                        ><Link to="/booking">
+        <Button className="text-xl px-10 py-6 group">
+            Start Booking
+            <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+        </Button>
+    </Link>
+    <Button variant="peach" className="text-xl px-10 py-6">
+        Meet our Team
+    </Button>
+</motion.div>
                     </div>
 
                     {/* Fragmented Visuals (Right Side) */}
@@ -314,11 +322,15 @@ const LandingPage = () => {
                                     </div>
 
                                     <Button
-                                        variant={selectedPackage?.id === pkg.id ? 'primary' : 'outline'}
-                                        className="w-full text-lg py-5"
-                                    >
-                                        {selectedPackage?.id === pkg.id ? 'Selected' : 'Select Plan'}
-                                    </Button>
+    variant={selectedPackage?.id === pkg.id ? 'primary' : 'outline'}
+    className="w-full text-lg py-5"
+    onClick={() => {
+        setSelectedPackage(pkg);
+        navigate('/booking'); 
+    }}
+>
+    {selectedPackage?.id === pkg.id ? 'Selected' : 'Select Plan'}
+</Button>
                                 </div>
                             </Card>
                         ))}
