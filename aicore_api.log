@@ -1,0 +1,22 @@
+/Users/kaito/Documents/document/hutech/pj-x/aicore/chatbot.py:2: FutureWarning: 
+
+All support for the `google.generativeai` package has ended. It will no longer be receiving 
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+See README for more details:
+
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+
+  import google.generativeai as genai
+/Users/kaito/Documents/document/hutech/pj-x/venv/lib/python3.12/site-packages/keras/src/saving/saving_lib.py:797: UserWarning: Skipping variable loading for optimizer 'adam', because it has 2 variables whereas the saved optimizer has 10 variables. 
+  saveable.load_own_variables(weights_store.get(inner_path))
+INFO:     Started server process [5224]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Warning: GEMINI_API_KEY not set.
+Loading model...
+Model loaded successfully.
+[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 454ms/step[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 461ms/step
+INFO:     127.0.0.1:50163 - "POST /predict/breed HTTP/1.1" 200 OK
+[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 90ms/step[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 97ms/step
+INFO:     127.0.0.1:50188 - "POST /predict/breed HTTP/1.1" 200 OK

@@ -5,7 +5,7 @@ import {
     PawPrint, Scissors, Waves, Crown, Calendar,
     Star, Phone, MapPin, Instagram, Facebook,
     Heart, Sparkles, Smile, Menu, X, ArrowRight,
-    ShieldCheck, Lock, CheckCircle2
+    ShieldCheck, Lock, CheckCircle2, Scan
 } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -41,61 +41,66 @@ const LandingPage = () => {
 
             {/* Bubble Navigation */}
             <nav className="fixed top-6 left-0 right-0 z-50 px-6">
-    <motion.div
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="max-w-6xl mx-auto bg-white/80 backdrop-blur-md rounded-full shadow-clay-md border border-white/50 px-8 py-3 flex items-center justify-between"
-    >
-        <div className="flex items-center gap-10"> 
-            <div className="flex items-center gap-3 group cursor-pointer">
-                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-clay-sm group-hover:rotate-12 transition-transform">
-                    <PawPrint className="text-white w-6 h-6" />
-                </div>
-                <span className="font-fredoka font-bold text-2xl text-primary tracking-tight">Pawsitive</span>
-            </div>
-
-            <div className="hidden lg:flex items-center gap-8">
-                {['Services', 'Gallery', 'Reviews'].map((item) => (
-                    <a
-                        key={item}
-                        href={`#${item.toLowerCase()}`}
-                        className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors relative group"
-                    >
-                        {item}
-                        <span className="absolute -bottom-1 left-0 w-0 h-1 bg-primary rounded-full transition-all group-hover:w-full" />
-                    </a>
-                ))}
-            </div>
-        </div>
-
-        <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center gap-6 border-l border-gray-200 pl-6">
-                <Link to="/login" className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors">
-                    Log In
-                </Link>
-                <Link to="/register">
-                    <Button className="py-2.5 px-6 text-sm" variant="peach">
-                        Sign Up
-                    </Button>
-                </Link>
-            </div>
-
-            <div className="flex items-center gap-3">
-                <Link to="/booking">
-                    <Button className="hidden sm:flex py-3 px-8 text-sm" variant="primary">
-                        Book Now
-                    </Button>
-                </Link>
-                <button
-                    className="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-cream shadow-clay-sm"
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                <motion.div
+                    initial={{ y: -100 }}
+                    animate={{ y: 0 }}
+                    className="max-w-6xl mx-auto bg-white/80 backdrop-blur-md rounded-full shadow-clay-md border border-white/50 px-8 py-3 flex items-center justify-between"
                 >
-                    {isMenuOpen ? <X /> : <Menu />}
-                </button>
-            </div>
-        </div>
-    </motion.div>
-</nav>
+                    <div className="flex items-center gap-10">
+                        <div className="flex items-center gap-3 group cursor-pointer">
+                            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-clay-sm group-hover:rotate-12 transition-transform">
+                                <PawPrint className="text-white w-6 h-6" />
+                            </div>
+                            <span className="font-fredoka font-bold text-2xl text-primary tracking-tight">Pawsitive</span>
+                        </div>
+
+                        <div className="hidden lg:flex items-center gap-8">
+                            {['Services', 'Gallery', 'Reviews'].map((item) => (
+                                <a
+                                    key={item}
+                                    href={`#${item.toLowerCase()}`}
+                                    className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors relative group"
+                                >
+                                    {item}
+                                    <span className="absolute -bottom-1 left-0 w-0 h-1 bg-primary rounded-full transition-all group-hover:w-full" />
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                        <div className="hidden md:flex items-center gap-6 border-l border-gray-200 pl-6">
+                            <Link to="/login" className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors">
+                                Log In
+                            </Link>
+                            <Link to="/register">
+                                <Button className="py-2.5 px-6 text-sm" variant="peach">
+                                    Sign Up
+                                </Button>
+                            </Link>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <Link to="/scan">
+                                <Button className="hidden sm:flex py-3 px-6 text-sm gap-2" variant="outline">
+                                    <Scan className="w-4 h-4" /> Scan Pet
+                                </Button>
+                            </Link>
+                            <Link to="/booking">
+                                <Button className="hidden sm:flex py-3 px-8 text-sm" variant="primary">
+                                    Book Now
+                                </Button>
+                            </Link>
+                            <button
+                                className="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-cream shadow-clay-sm"
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            >
+                                {isMenuOpen ? <X /> : <Menu />}
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </nav>
 
             {/* Mobile Menu Overlay */}
             <AnimatePresence>
@@ -165,15 +170,18 @@ const LandingPage = () => {
                             transition={{ delay: 0.6 }}
                             className="flex flex-wrap gap-6 justify-center lg:justify-start"
                         ><Link to="/booking">
-        <Button className="text-xl px-10 py-6 group">
-            Start Booking
-            <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
-        </Button>
-    </Link>
-    <Button variant="peach" className="text-xl px-10 py-6">
-        Meet our Team
-    </Button>
-</motion.div>
+                                <Button className="text-xl px-10 py-6 group">
+                                    Start Booking
+                                    <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                                </Button>
+                            </Link>
+                            <Link to="/scan">
+                                <Button variant="peach" className="text-xl px-10 py-6 group flex items-center gap-3">
+                                    <Scan className="w-6 h-6" />
+                                    AI Pet Scanner
+                                </Button>
+                            </Link>
+                        </motion.div>
                     </div>
 
                     {/* Fragmented Visuals (Right Side) */}
@@ -322,15 +330,15 @@ const LandingPage = () => {
                                     </div>
 
                                     <Button
-    variant={selectedPackage?.id === pkg.id ? 'primary' : 'outline'}
-    className="w-full text-lg py-5"
-    onClick={() => {
-        setSelectedPackage(pkg);
-        navigate('/booking'); 
-    }}
->
-    {selectedPackage?.id === pkg.id ? 'Selected' : 'Select Plan'}
-</Button>
+                                        variant={selectedPackage?.id === pkg.id ? 'primary' : 'outline'}
+                                        className="w-full text-lg py-5"
+                                        onClick={() => {
+                                            setSelectedPackage(pkg);
+                                            navigate('/booking');
+                                        }}
+                                    >
+                                        {selectedPackage?.id === pkg.id ? 'Selected' : 'Select Plan'}
+                                    </Button>
                                 </div>
                             </Card>
                         ))}
