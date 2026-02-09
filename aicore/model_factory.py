@@ -15,14 +15,17 @@ def create_model(num_classes=config.NUM_CLASSES):
     # Freeze the base model by default
     base_model.trainable = False
     
-    # Define classification head
-    model = tf.keras.Sequential([
-        base_model,
+    # Create classification head as a sub-sequential to match training structure
+    head = tf.keras.Sequential([
         tf.keras.layers.GlobalAveragePooling2D(),
         tf.keras.layers.Dense(128, activation='relu'),
-        # Add dropout for better generalization
-        tf.keras.layers.Dropout(0.2), 
         tf.keras.layers.Dense(num_classes, activation='softmax')
+    ])
+    
+    # Complete model
+    model = tf.keras.Sequential([
+        base_model,
+        head
     ])
     
     model.compile(

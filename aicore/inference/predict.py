@@ -71,7 +71,7 @@ def predict(model, image_path):
 
 if __name__ == "__main__":
     # Đường dẫn ảnh mặc định
-    default_img = os.path.join(os.path.dirname(__file__), '76cf5b9153b8816802a90187259d8656.jpg')
+    default_img = os.path.join(os.path.dirname(__file__), 'poodle.jpg')
     
     img_path = sys.argv[1] if len(sys.argv) > 1 else default_img
     
