@@ -7,26 +7,32 @@ export default function ProductPage() {
   const [editing, setEditing] = useState(null);
 
   const addOrUpdate = (product) => {
-    if (product.id) {
-      setProducts(products.map(p => p.id === product.id ? product : p));
-    } else {
-      product.id = Date.now();
-      setProducts([...products, product]);
-    }
+    setProducts((prev) => {
+      // UPDATE
+      if (product.id) {
+        return prev.map((p) => (p.id === product.id ? product : p));
+      }
+      // ADD
+      return [...prev, { ...product, id: Date.now() }];
+    });
+
     setEditing(null);
   };
 
   const deleteProduct = (id) => {
-    setProducts(products.filter(p => p.id !== id));
+    setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between mb-6">
-        <h1 className="text-3xl font-bold text-primary">Product Management</h1>
+    <div className="p-8 max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-extrabold text-primary tracking-tight">
+          Product Management
+        </h1>
+
         <button
           onClick={() => setEditing({})}
-          className="bg-primary text-white px-6 py-3 rounded-[var(--radius-clay)] shadow-[var(--shadow-clay-puffy)] font-semibold"
+          className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-2xl shadow-lg hover:scale-105 transition font-semibold"
         >
           + Add Product
         </button>
@@ -34,11 +40,11 @@ export default function ProductPage() {
 
       <ProductTable
         products={products}
-        onEdit={setEditing}
+        onEdit={(product) => setEditing(product)}
         onDelete={deleteProduct}
       />
 
-      {editing !== null && (
+      {editing && (
         <ProductForm
           product={editing}
           onSave={addOrUpdate}
