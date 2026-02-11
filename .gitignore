@@ -60,7 +60,7 @@ yarn-error.log*
 chat_history/
 .history/
 .shared/ 
-.agent/
+
 # --- AI Models & Datasets (QUAN TRỌNG: File nặng không up lên git) ---
 # Model weights (PyTorch, TensorFlow, HuggingFace...)
 *.pt
