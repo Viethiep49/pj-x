@@ -50,8 +50,8 @@ def create_database():
         return False
 
 def init_schema():
-    """Initialize the schema in the target database."""
-    print(f"Initializing schema in database '{DB_NAME}'...")
+    """Initialize the schema and seed data in the target database."""
+    print(f"Initializing schema and seed data in database '{DB_NAME}'...")
     try:
         conn = psycopg2.connect(
             user=DB_USER,
@@ -65,18 +65,31 @@ def init_schema():
         
         # Read schema.sql
         schema_path = os.path.join(os.path.dirname(__file__), 'schema.sql')
-        with open(schema_path, 'r') as f:
-            schema_sql = f.read()
-            
-        print("Executing schema.sql...")
-        cur.execute(schema_sql)
-        print("Schema initialized successfully.")
+        if os.path.exists(schema_path):
+            print("Executing schema.sql...")
+            with open(schema_path, 'r', encoding='utf-8') as f:
+                schema_sql = f.read()
+            cur.execute(schema_sql)
+            print("Schema initialized successfully.")
+        else:
+            print("Warning: schema.sql not found.")
+
+        # Read seed.sql
+        seed_path = os.path.join(os.path.dirname(__file__), 'seed.sql')
+        if os.path.exists(seed_path):
+            print("Executing seed.sql...")
+            with open(seed_path, 'r', encoding='utf-8') as f:
+                seed_sql = f.read()
+            cur.execute(seed_sql)
+            print("Seed data initialized successfully.")
+        else:
+            print("Warning: seed.sql not found.")
         
         cur.close()
         conn.close()
         return True
     except Exception as e:
-        print(f"Error initializing schema: {e}")
+        print(f"Error initializing database: {e}")
         return False
 
 if __name__ == "__main__":
