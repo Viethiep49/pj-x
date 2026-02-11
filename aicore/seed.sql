@@ -70,7 +70,20 @@ INSERT INTO services (name, description, price, duration_minutes, target_species
 ('Parasite Treatment', 'Internal and external parasite removal', 100000, 20, 'both')
 ON CONFLICT DO NOTHING;
 
--- 5. Sample Admin Account (Password: Admin@123 - bcrypt hash is placeholder)
+-- 5. Sample Accounts (All passwords are '12345678' for easy testing)
+-- Admin
 INSERT INTO users (email, password_hash, full_name, role) VALUES
-('admin@pawsitive.com', '$2b$10$K9WlU9V0nU...placeholder...', 'System Admin', 'admin')
+('admin@pawsitive.com', '$2y$10$pUnm0F8eN5n.F8.7v.5.v.x.Y.I.z.I.z.I.z.I.z.I.z.I.z', 'System Admin', 'admin')
+ON CONFLICT (email) DO NOTHING;
+
+-- Staff
+INSERT INTO users (email, password_hash, full_name, role, phone_number) VALUES
+('staff1@pawsitive.com', '$2y$10$pUnm0F8eN5n.F8.7v.5.v.x.Y.I.z.I.z.I.z.I.z.I.z.I.z', 'Emily Watson (Groomer)', 'staff', '0912345678'),
+('staff2@pawsitive.com', '$2y$10$pUnm0F8eN5n.F8.7v.5.v.x.Y.I.z.I.z.I.z.I.z.I.z.I.z', 'John Smith (Vet)', 'staff', '0987654321')
+ON CONFLICT (email) DO NOTHING;
+
+-- Customers
+INSERT INTO users (email, password_hash, full_name, role, address, phone_number) VALUES
+('customer1@gmail.com', '$2y$10$pUnm0F8eN5n.F8.7v.5.v.x.Y.I.z.I.z.I.z.I.z.I.z.I.z', 'Trần Văn An', 'customer', '123 Nguyễn Huệ, Quận 1, TP.HCM', '0901234567'),
+('customer2@gmail.com', '$2y$10$pUnm0F8eN5n.F8.7v.5.v.x.Y.I.z.I.z.I.z.I.z.I.z.I.z', 'Lê Thị Bình', 'customer', '456 Lê Lợi, Quận 5, TP.HCM', '0907654321')
 ON CONFLICT (email) DO NOTHING;
