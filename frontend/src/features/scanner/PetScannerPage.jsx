@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Scan, PawPrint, X, RefreshCw, Sparkles, AlertCircle } from 'lucide-react';
-import axios from 'axios';
+import { Upload, Scan, PawPrint, X, RefreshCw, Sparkles, AlertCircle, Loader } from 'lucide-react';
+import * as tf from '@tensorflow/tfjs';
 
 // --- API Configuration ---
 const API_URL = 'http://localhost:8000'; // Ensure this matches your backend
@@ -14,6 +14,46 @@ const PetScannerPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const fileInputRef = useRef(null);
+
+    // AI Model State
+    const [tfModel, setTfModel] = useState(null);
+    const [classLabels, setClassLabels] = useState([]);
+    const [isModelReady, setIsModelReady] = useState(false);
+    const [modelLoadingError, setModelLoadingError] = useState(null);
+
+    // Unmount cleanup
+    useEffect(() => {
+        return () => {
+            if (preview) URL.revokeObjectURL(preview);
+        };
+    }, [preview]);
+
+    // Load Model on Mount
+    useEffect(() => {
+        const loadModel = async () => {
+            try {
+                console.log("Loading model from:", `${API_URL}/model/model.json`);
+                // Load Graph Model
+                const model = await tf.loadGraphModel(`${API_URL}/model/model.json`);
+                setTfModel(model);
+                console.log("Model loaded successfully");
+
+                // Load Classes
+                const response = await fetch(`${API_URL}/model/classes.json`);
+                if (!response.ok) throw new Error("Failed to load class labels");
+                const labels = await response.json();
+                setClassLabels(labels);
+                console.log(`Loaded ${labels.length} classes`);
+
+                setIsModelReady(true);
+            } catch (err) {
+                console.error("Failed to load AI model:", err);
+                setModelLoadingError("Failed to load AI resources. Check backend connection.");
+            }
+        };
+
+        loadModel();
+    }, []);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -38,24 +78,60 @@ const PetScannerPage = () => {
     };
 
     const handleScan = async () => {
-        if (!image) return;
+        if (!image || !tfModel) return;
 
         setLoading(true);
         setError(null);
 
-        const formData = new FormData();
-        formData.append('file', image);
-
         try {
-            const response = await axios.post(`${API_URL}/predict/breed`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
+            // Create an HTMLImageElement to load the image data
+            const imgElement = document.createElement('img');
+            imgElement.src = preview;
+            await new Promise((resolve, reject) => {
+                imgElement.onload = resolve;
+                imgElement.onerror = reject;
             });
-            setResult(response.data);
+
+            // Run Inference
+            const { breed, confidence } = tf.tidy(() => {
+                // 1. From Pixels
+                let tensor = tf.browser.fromPixels(imgElement);
+
+                // 2. Resize to 224x224
+                tensor = tf.image.resizeBilinear(tensor, [224, 224]);
+
+                // 3. Preprocess (Match Training Script: [0, 1])
+                // The training script used img / 255.0
+                tensor = tensor.toFloat().div(tf.scalar(255.0));
+
+                // 4. Expand Batch Dimension [1, 224, 224, 3]
+                tensor = tensor.expandDims(0);
+
+                // 5. Predict
+                const predictions = tfModel.predict(tensor);
+
+                // 6. Get data
+                // predictions might be a tensor or array of tensors? 
+                // For graph model output usually strictly tensor.
+                // MobileNetV2 usually outputs softmax logits or probs.
+                // Check if it's logits or softmax. Assuming softmax if confidence is high.
+                // If logits, we might need tf.softmax(predictions) but typically model output includes it.
+
+                const scores = predictions.dataSync(); // Sync needed inside tidy? No, dataSync works but best to return values
+                const maxScore = Math.max(...scores);
+                const maxIndex = scores.indexOf(maxScore);
+
+                const label = classLabels[maxIndex] || "Unknown";
+                const conf = (maxScore * 100).toFixed(2);
+
+                return { breed: label, confidence: conf };
+            });
+
+            setResult({ breed, confidence: `${confidence}%` });
+
         } catch (err) {
             console.error("Scan error:", err);
-            setError("Failed to identify breed. Please check your connection.");
+            setError("Failed to identify breed. Please try another image.");
         } finally {
             setLoading(false);
         }
@@ -84,7 +160,7 @@ const PetScannerPage = () => {
 
     return (
         <div className="min-h-screen bg-sky-50 py-12 px-4 sm:px-6 lg:px-8 font-sans text-slate-700">
-            <motion.div 
+            <motion.div
                 className="max-w-3xl mx-auto"
                 initial="hidden"
                 animate="visible"
@@ -92,7 +168,7 @@ const PetScannerPage = () => {
             >
                 {/* Header */}
                 <div className="text-center mb-10">
-                    <motion.div 
+                    <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", stiffness: 260, damping: 20 }}
@@ -106,6 +182,20 @@ const PetScannerPage = () => {
                     <p className="text-lg text-slate-500 max-w-2xl mx-auto">
                         Upload a photo of your furry friend and let our AI magically identify their breed!
                     </p>
+
+                    {/* Model Status Indicator */}
+                    {!isModelReady && !modelLoadingError && (
+                        <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-400">
+                            <Loader className="w-4 h-4 animate-spin" />
+                            <span>Runing AI Model on your browser...</span>
+                        </div>
+                    )}
+                    {modelLoadingError && (
+                        <div className="mt-4 flex items-center justify-center gap-2 text-sm text-red-500 font-medium">
+                            <AlertCircle className="w-4 h-4" />
+                            <span>{modelLoadingError}</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Main Card */}
@@ -115,11 +205,11 @@ const PetScannerPage = () => {
                     <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-sky-100 rounded-full blur-3xl opacity-50"></div>
 
                     <div className="relative p-8 sm:p-12">
-                        
+
                         {/* Error Message */}
                         <AnimatePresence>
                             {error && (
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: "auto" }}
                                     exit={{ opacity: 0, height: 0 }}
@@ -134,18 +224,20 @@ const PetScannerPage = () => {
 
                         {/* Upload Area / Preview */}
                         {!preview ? (
-                            <div 
-                                className="border-3 border-dashed border-slate-200 rounded-2xl p-12 text-center hover:border-rose-300 hover:bg-rose-50/30 transition-all duration-300 cursor-pointer group"
+                            <div
+                                className={`border-3 border-dashed border-slate-200 rounded-2xl p-12 text-center transition-all duration-300 group
+                                    ${!isModelReady ? 'opacity-50 pointer-events-none' : 'hover:border-rose-300 hover:bg-rose-50/30 cursor-pointer'}`}
                                 onDragOver={(e) => e.preventDefault()}
                                 onDrop={handleDrop}
-                                onClick={() => fileInputRef.current.click()}
+                                onClick={() => isModelReady && fileInputRef.current.click()}
                             >
-                                <input 
-                                    type="file" 
-                                    ref={fileInputRef} 
-                                    className="hidden" 
-                                    accept="image/*" 
-                                    onChange={handleFileChange} 
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                    disabled={!isModelReady}
                                 />
                                 <div className="w-20 h-20 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
                                     <Upload className="w-8 h-8" />
@@ -157,11 +249,11 @@ const PetScannerPage = () => {
                         ) : (
                             <div className="relative rounded-2xl overflow-hidden bg-slate-900 aspect-video sm:aspect-[4/3] shadow-inner group">
                                 <img src={preview} alt="Pet Preview" className="w-full h-full object-contain mx-auto" />
-                                
+
                                 {/* Scanning Overlay */}
                                 {loading && (
                                     <div className="absolute inset-0 z-10 bg-black/20">
-                                        <motion.div 
+                                        <motion.div
                                             variants={scanLineVariants}
                                             animate="scanning"
                                             className="absolute left-0 right-0 h-1 bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.8)]"
@@ -175,7 +267,7 @@ const PetScannerPage = () => {
                                 {/* Controls Overlay */}
                                 {!loading && !result && (
                                     <div className="absolute top-4 right-4 flex gap-2">
-                                        <button 
+                                        <button
                                             onClick={resetScanner}
                                             className="p-2 bg-white/20 backdrop-blur-md hover:bg-white/40 text-white rounded-full transition-colors"
                                             title="Remove Image"
@@ -189,12 +281,12 @@ const PetScannerPage = () => {
 
                         {/* Action Buttons */}
                         {preview && !loading && !result && (
-                            <motion.div 
+                            <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="mt-8 flex justify-center"
                             >
-                                <button 
+                                <button
                                     onClick={handleScan}
                                     className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-rose-500/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
                                 >
@@ -207,13 +299,13 @@ const PetScannerPage = () => {
 
                         {/* Result Display */}
                         {result && (
-                            <motion.div 
+                            <motion.div
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="mt-8 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-6 sm:p-8 text-center relative overflow-hidden"
                             >
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-200/20 rounded-full -mt-10 -mr-10 blur-2xl"></div>
-                                
+
                                 <div className="relative z-10">
                                     <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold mb-4">
                                         <Sparkles className="w-4 h-4" /> Match Found!
@@ -222,12 +314,12 @@ const PetScannerPage = () => {
                                         {result.breed}
                                     </h2>
                                     <p className="text-slate-500 mb-6 flex items-center justify-center gap-2">
-                                        Confidence Score: 
+                                        Confidence Score:
                                         <span className="font-bold text-emerald-600">{result.confidence}</span>
                                     </p>
-                                    
+
                                     <div className="flex justify-center gap-4">
-                                        <button 
+                                        <button
                                             onClick={resetScanner}
                                             className="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors flex items-center gap-2"
                                         >

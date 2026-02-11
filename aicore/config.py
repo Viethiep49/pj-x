@@ -19,6 +19,13 @@ IMAGES_DIR = os.path.join(DATASET_DIR, 'images', 'images')
 ANNOTATIONS_DIR = os.path.join(DATASET_DIR, 'annotations', 'annotations')
 
 # Model Paths
+# Model Paths
+# Using the TF.js model as the single source of truth
+WEB_MODEL_DIR = os.path.join(BASE_DIR, 'web_model')
+MODEL_JSON_PATH = os.path.join(WEB_MODEL_DIR, 'model.json')
+CLASSES_JSON_PATH = os.path.join(WEB_MODEL_DIR, 'classes.json')
+
+# Deprecated paths (kept for reference if training script is revived)
 WEIGHTS_PATH = os.path.join(BASE_DIR, 'fine_tuned_mobilenetv2.weights.h5')
 EXPORT_PATH = os.path.join(BASE_DIR, 'model', 'web_model')
 
