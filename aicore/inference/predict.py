@@ -3,39 +3,39 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 import sys
+import json
+import tensorflowjs as tfjs
 
 # Thêm thư mục gốc vào path để import được aicore
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import aicore.config as config
-from aicore.model_factory import create_model
-
-
-CLASS_NAMES = [
-    'Abyssinian', 'Bengal', 'Birman', 'Bombay', 'British_Shorthair', 
-    'Egyptian_Mau', 'Maine_Coon', 'Persian', 'Ragdoll', 'Russian_Blue', 
-    'Siamese', 'Sphynx', 'american_bulldog', 'american_pit_bull_terrier', 
-    'basset_hound', 'beagle', 'boxer', 'chihuahua', 'english_cocker_spaniel', 
-    'english_setter', 'german_shorthaired', 'great_pyrenees', 'havanese', 
-    'japanese_chin', 'keeshond', 'leonberger', 'miniature_pinscher', 
-    'newfoundland', 'pomeranian', 'pug', 'saint_bernard', 'samoyed', 
-    'scottish_terrier', 'shiba_inu', 'staffordshire_bull_terrier', 
-    'wheaten_terrier', 'yorkshire_terrier'
-]
 
 def load_trained_model():
-    """Khởi tạo model và load weight."""
-    print("--- Đang khởi tạo model MobileNetV2 ---")
-    model = create_model(num_classes=len(CLASS_NAMES))
+    """Khởi tạo model từ định dạng TensorFlow.js."""
+    tfjs_model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'web_model')
+    model_json_path = os.path.join(tfjs_model_path, 'model.json')
+    classes_json_path = os.path.join(tfjs_model_path, 'classes.json')
     
-    if os.path.exists(config.WEIGHTS_PATH):
-        print(f"--- Đang load weights từ: {config.WEIGHTS_PATH} ---")
-        model.load_weights(config.WEIGHTS_PATH)
-        print("--- Load weights thành công! ---")
-    else:
-        print(f"ERROR: Không tìm thấy file weights tại {config.WEIGHTS_PATH}")
-        return None
-    return model
+    print("--- Đang khởi tạo model từ TensorFlow.js ---")
+    
+    if not os.path.exists(model_json_path):
+        print(f"ERROR: Không tìm thấy file model.json tại {model_json_path}")
+        return None, None
+
+    try:
+        # Load model định dạng Keras từ TF.js
+        model = tfjs.converters.load_keras_model(model_json_path)
+        print("--- Load model thành công! ---")
+        
+        # Load class names
+        with open(classes_json_path, 'r') as f:
+            class_names = json.load(f)
+        
+        return model, class_names
+    except Exception as e:
+        print(f"ERROR khi load model: {e}")
+        return None, None
 
 def preprocess_image(image_path):
     """Tiền xử lý ảnh giống như lúc training."""
@@ -47,23 +47,20 @@ def preprocess_image(image_path):
     img_array = np.expand_dims(img_array, axis=0) # Thêm batch dimension
     return img_array
 
-def predict(model, image_path):
+def predict(model, class_names, image_path):
     """Dự đoán giống Pet từ ảnh."""
-    if model is None:
+    if model is None or class_names is None:
         return
     
     print(f"\n--- Đang xử lý ảnh: {os.path.basename(image_path)} ---")
     processed_img = preprocess_image(image_path)
     
     predictions = model.predict(processed_img)
-    score = tf.nn.softmax(predictions[0]) # Nếu model output chưa qua softmax
-    # Lưu ý: Model trong model_factory đã có activation='softmax' ở lớp cuối
-    # nên predictions[0] chính là xác suất rồi.
     
     class_idx = np.argmax(predictions[0])
     confidence = predictions[0][class_idx] * 100
     
-    result = CLASS_NAMES[class_idx]
+    result = class_names[class_idx]
     print(f"Kết quả dự đoán: {result}")
     print(f"Độ tin cậy: {confidence:.2f}%")
     
@@ -78,5 +75,6 @@ if __name__ == "__main__":
     if not os.path.exists(img_path):
         print(f"ERROR: Không tìm thấy ảnh tại {img_path}")
     else:
-        pet_model = load_trained_model()
-        predict(pet_model, img_path)
+        pet_model, labels = load_trained_model()
+        if pet_model:
+            predict(pet_model, labels, img_path)
