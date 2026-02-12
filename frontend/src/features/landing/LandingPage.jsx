@@ -574,7 +574,7 @@ const LandingPage = () => {
                     {[
                         { title: 'Links', items: ['Services', 'Gallery', 'Booking', 'Reviews'] },
                         { title: 'Support', items: ['Help Center', 'Safety Rules', 'Privacy', 'Terms'] },
-                        { title: 'Contact', items: ['+1 (555) PAW-SOME', 'groom@pawsitive.pet', '123 Pet St, Valley', 'Mon-Sun: 9am-6pm'] }
+                        { title: 'Contact', items: ['+84 912 345 678', 'groom@pawsitive.pet','123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh', 'Mon-Sun: 9am-6pm'] }
                     ].map((col) => (
                         <div key={col.title} className="space-y-6">
                             <h4 className="font-fredoka font-bold text-xl text-gray-800">{col.title}</h4>

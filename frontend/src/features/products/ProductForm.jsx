@@ -6,6 +6,7 @@ export default function ProductForm({ product = {}, onSave, onClose }) {
     name: "",
     price: "",
     stock: "",
+    image: "",
   });
 
   useEffect(() => {
@@ -14,12 +15,14 @@ export default function ProductForm({ product = {}, onSave, onClose }) {
       name: product.name || "",
       price: product.price ?? "",
       stock: product.stock ?? "",
+      image: product.image || "",
     });
   }, [product]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    // Không cho nhập số âm
     if ((name === "price" || name === "stock") && value < 0) return;
 
     setForm({ ...form, [name]: value });
@@ -37,7 +40,7 @@ export default function ProductForm({ product = {}, onSave, onClose }) {
       stock: Number(form.stock),
     });
 
-    setForm({ id: null, name: "", price: "", stock: "" });
+    onClose();
   };
 
   return (
@@ -50,6 +53,7 @@ export default function ProductForm({ product = {}, onSave, onClose }) {
 
         <form onSubmit={submit} className="flex flex-col gap-4">
 
+          {/* NAME */}
           <input
             name="name"
             placeholder="Product name"
@@ -58,6 +62,7 @@ export default function ProductForm({ product = {}, onSave, onClose }) {
             className="p-3 rounded-xl bg-white shadow-clay-inner focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
 
+          {/* PRICE */}
           <input
             name="price"
             type="number"
@@ -67,6 +72,7 @@ export default function ProductForm({ product = {}, onSave, onClose }) {
             className="p-3 rounded-xl bg-white shadow-clay-inner focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
 
+          {/* STOCK */}
           <input
             name="stock"
             type="number"
@@ -76,8 +82,27 @@ export default function ProductForm({ product = {}, onSave, onClose }) {
             className="p-3 rounded-xl bg-white shadow-clay-inner focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
 
-          <div className="flex justify-end gap-3 mt-4">
+          {/* IMAGE URL */}
+          <input
+            name="image"
+            type="text"
+            placeholder="Image URL (optional)"
+            value={form.image}
+            onChange={handleChange}
+            className="p-3 rounded-xl bg-white shadow-clay-inner focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
 
+          {/* PREVIEW ẢNH */}
+          {form.image && (
+            <img
+              src={form.image}
+              alt="preview"
+              className="h-32 object-cover rounded-xl border"
+              onError={(e) => (e.target.style.display = "none")}
+            />
+          )}
+
+          <div className="flex justify-end gap-3 mt-4">
             <button
               type="button"
               onClick={onClose}
@@ -92,7 +117,6 @@ export default function ProductForm({ product = {}, onSave, onClose }) {
             >
               Save
             </button>
-
           </div>
         </form>
       </div>
