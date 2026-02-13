@@ -1,5 +1,5 @@
 import React from 'react'
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 // Layouts
 import MainLayout from './layouts/MainLayout'
@@ -17,10 +17,10 @@ import ProductPage from './features/products/ProductPage'
 
 function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
 
-        {/* 🌍 PUBLIC ROUTES */}
+        {/* 🌍 PUBLIC */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/services" element={<PricingPage />} />
@@ -28,22 +28,22 @@ function App() {
           <Route path="/scan" element={<PetScannerPage />} />
         </Route>
 
-        {/* 🔐 AUTH ROUTES */}
+        {/* 🔐 AUTH */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Route>
 
-        {/* 🛠️ ADMIN DASHBOARD */}
-        <Route element={<AdminLayout />}>
-          <Route path="/admin/products" element={<ProductPage />} />
+        {/* 🛠️ ADMIN */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="products" element={<ProductPage />} />
         </Route>
 
-        {/* ❌ CATCH ALL */}
+        {/* ❌ 404 */}
         <Route path="*" element={<Navigate to="/" replace />} />
 
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   )
 }
 
