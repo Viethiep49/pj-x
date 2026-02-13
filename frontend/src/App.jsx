@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 // Layouts
 import MainLayout from './layouts/MainLayout'
@@ -17,7 +17,7 @@ import ProductPage from './features/products/ProductPage'
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
 
         {/* 🌍 PUBLIC ROUTES */}
@@ -43,7 +43,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
 
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 
