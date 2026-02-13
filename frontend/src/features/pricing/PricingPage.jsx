@@ -1,74 +1,132 @@
-import React from 'react';
-import Card from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Waves, Scissors, Crown, Smile } from 'lucide-react'
+import Card from '../../components/ui/Card'
+import Button from '../../components/ui/Button'
 
 const PricingPage = () => {
-    const plans = [
+    const navigate = useNavigate()
+    const [selectedPackage, setSelectedPackage] = useState(null)
+
+    const packages = [
         {
-            name: 'Starter',
-            price: '$0',
-            desc: 'Perfect for side projects',
-            features: ['Up to 1,000 users', 'Basic Analytics', 'Community Support'],
-            cta: 'Start for Free',
-            variant: 'secondary'
+            id: 'essential',
+            title: 'Essential Glow',
+            price: '35',
+            icon: <Waves className="w-12 h-12" />,
+            desc: 'Perfect for regular maintenance. Includes bath and brush.',
+            color: 'lavender',
+            perks: ['Luxury Bath', 'Nail Filing', 'Ear Cleaning']
         },
         {
-            name: 'Pro',
-            price: '$29',
-            desc: 'For growing teams',
-            features: ['Unlimited users', 'Advanced Analytics', 'Priority Support', 'Custom Domain'],
-            cta: 'Get Started',
-            variant: 'primary',
-            popular: true
+            id: 'full',
+            title: 'The Full Clip',
+            price: '65',
+            icon: <Scissors className="w-12 h-12" />,
+            desc: 'Complete breed-standard haircut and styling by experts.',
+            color: 'peach',
+            recommended: true,
+            perks: ['Breed Styling', 'Sanitary Trim', 'Paw Massage']
         },
         {
-            name: 'Enterprise',
-            price: 'Contact',
-            desc: 'For large organizations',
-            features: ['SSO Integration', 'Audit Logs', 'Dedicated Manager', 'SLA'],
-            cta: 'Contact Sales',
-            variant: 'outline'
+            id: 'royal',
+            title: 'Royal Spa',
+            price: '95',
+            icon: <Crown className="w-12 h-12" />,
+            desc: 'The ultimate luxury experience. Full treatment for royalty.',
+            color: 'cream',
+            perks: ['Teeth Cleaning', 'Organic Scent', 'De-shedding Treatment']
         }
-    ];
+    ]
 
     return (
-        <div className="py-20 px-4 max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-                <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Simple, transparent pricing</h1>
-                <p className="text-xl text-gray-600">No hidden fees. Cancel at any time.</p>
-            </div>
+        <section className="py-32 px-6">
+            <div className="max-w-7xl mx-auto">
+                <div className="text-center mb-20 space-y-4">
+                    <h1 className="text-6xl font-fredoka font-bold text-gray-800">
+                        Our Spa Packages
+                    </h1>
+                    <p className="text-xl text-gray-500 font-medium max-w-2xl mx-auto">
+                        Choose the perfect pampering level for your furry friend.
+                        Each package comes with a personalized health check & organic treats!
+                    </p>
+                </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
-                {plans.map((plan, idx) => (
-                    <Card key={idx} className={`relative flex flex-col ${plan.popular ? 'border-blue-500 ring-2 ring-blue-500 ring-offset-2' : ''}`}>
-                        {plan.popular && (
-                            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-bold">
-                                Most Popular
+                <div className="grid md:grid-cols-3 gap-12">
+                    {packages.map((pkg) => (
+                        <Card
+                            key={pkg.id}
+                            variant={pkg.color}
+                            className={`relative cursor-pointer group ${
+                                selectedPackage?.id === pkg.id
+                                    ? 'ring-4 ring-primary ring-offset-8 transition-all'
+                                    : ''
+                            }`}
+                            onClick={() => setSelectedPackage(pkg)}
+                        >
+                            {pkg.recommended && (
+                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-primary text-white px-6 py-2 rounded-full font-fredoka font-bold shadow-md text-sm whitespace-nowrap z-10">
+                                    MOST POPULAR
+                                </div>
+                            )}
+
+                            <div className="space-y-8 text-center">
+                                <div className="w-24 h-24 mx-auto bg-white rounded-full shadow-inner flex items-center justify-center text-primary">
+                                    {pkg.icon}
+                                </div>
+
+                                <div>
+                                    <h3 className="text-4xl font-fredoka font-bold text-gray-800 mb-2">
+                                        {pkg.title}
+                                    </h3>
+
+                                    <div className="flex items-center justify-center gap-1">
+                                        <span className="text-2xl font-bold text-primary mt-2">$</span>
+                                        <span className="text-6xl font-fredoka font-bold text-primary">
+                                            {pkg.price}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <p className="text-gray-500 font-medium leading-relaxed italic">
+                                    "{pkg.desc}"
+                                </p>
+
+                                <div className="space-y-3 pt-4 border-t border-black/5">
+                                    {pkg.perks.map((perk, i) => (
+                                        <div
+                                            key={i}
+                                            className="flex items-center gap-3 text-gray-700 font-bold"
+                                        >
+                                            <Smile className="w-5 h-5 text-primary" />
+                                            {perk}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <Button
+                                    variant={
+                                        selectedPackage?.id === pkg.id
+                                            ? 'primary'
+                                            : 'outline'
+                                    }
+                                    className="w-full text-lg py-5"
+                                    onClick={() => {
+                                        setSelectedPackage(pkg)
+                                        navigate('/booking')
+                                    }}
+                                >
+                                    {selectedPackage?.id === pkg.id
+                                        ? 'Selected'
+                                        : 'Select Plan'}
+                                </Button>
                             </div>
-                        )}
-                        <div className="mb-8">
-                            <h3 className="text-lg font-bold text-gray-500 uppercase tracking-wider mb-2">{plan.name}</h3>
-                            <div className="text-4xl font-extrabold text-gray-900 mb-2">{plan.price}<span className="text-lg font-normal text-gray-500">/mo</span></div>
-                            <p className="text-gray-600">{plan.desc}</p>
-                        </div>
-
-                        <ul className="space-y-4 mb-8 flex-grow">
-                            {plan.features.map((feat, i) => (
-                                <li key={i} className="flex items-center gap-3 text-gray-700">
-                                    <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    {feat}
-                                </li>
-                            ))}
-                        </ul>
-
-                        <Button variant={plan.variant} className="w-full">{plan.cta}</Button>
-                    </Card>
-                ))}
+                        </Card>
+                    ))}
+                </div>
             </div>
-        </div>
-    );
-};
+        </section>
+    )
+}
 
-export default PricingPage;
+export default PricingPage
