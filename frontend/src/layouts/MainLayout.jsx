@@ -7,7 +7,7 @@ const MainLayout = () => {
 
     return (
         <div className="min-h-screen flex flex-col bg-clay-background font-nunito selection:bg-primary/20 overflow-x-hidden">
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="popLayout">
                 <motion.main
                     key={location.pathname}
                     initial={{ opacity: 0, y: 20 }}
