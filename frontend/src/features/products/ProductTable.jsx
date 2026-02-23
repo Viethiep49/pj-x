@@ -16,7 +16,7 @@ export default function ProductTable({ products, onEdit, onDelete }) {
         >
           {/* 🖼 HIỂN THỊ ẢNH */}
           <img
-            src={p.image || "https://via.placeholder.com/300"}
+            src={p.image_url || "https://via.placeholder.com/300"}
             alt={p.name}
             onError={(e) => (e.target.src = "https://via.placeholder.com/300")}
             className="w-full h-40 object-cover rounded-xl mb-4"
@@ -33,7 +33,7 @@ export default function ProductTable({ products, onEdit, onDelete }) {
             </span>
 
             <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
-              Stock: {p.stock}
+              Stock: {p.stock_quantity ?? 0}
             </span>
           </div>
 

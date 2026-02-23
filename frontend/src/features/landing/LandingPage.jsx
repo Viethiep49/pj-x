@@ -22,14 +22,21 @@ import {
   Lock,
   CheckCircle2,
   Scan,
+  ShoppingBag,
+  User,
+  LogOut,
 } from "lucide-react";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
+import { useAuth } from "../../contexts/AuthContext";
+import { useCart } from "../../contexts/CartContext";
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const { cartCount, openCart } = useCart();
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [bookingStep, setBookingStep] = useState(1);
 
@@ -38,25 +45,23 @@ const LandingPage = () => {
       {/* Organic Background Blobs */}
       <motion.div
         animate={{
-          scale: [1, 1.2, 1],
-          rotate: [0, 90, 0],
           x: [0, 50, 0],
         }}
         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-peach/30 rounded-full blur-[100px] -z-10"
+        className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-peach/30 rounded-full blur-[100px] -z-10 pointer-events-none"
+        style={{ willChange: "transform" }}
       />
       <motion.div
         animate={{
-          scale: [1.2, 1, 1.2],
-          rotate: [0, -120, 0],
-          y: [0, 100, 0],
+          y: [0, 80, 0],
         }}
         transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-        className="absolute top-1/2 -right-40 w-[500px] h-[500px] bg-lavender/30 rounded-full blur-[100px] -z-10"
+        className="absolute top-1/2 -right-40 w-[500px] h-[500px] bg-lavender/30 rounded-full blur-[100px] -z-10 pointer-events-none"
+        style={{ willChange: "transform" }}
       />
 
       {/* Bubble Navigation */}
-      <nav className="fixed top-6 left-0 right-0 z-50 px-6">
+      <nav className="fixed top-6 left-0 right-0 z-50">
         <motion.div
           initial={{ y: -100 }}
           animate={{ y: 0 }}
@@ -72,12 +77,12 @@ const LandingPage = () => {
               </span>
             </div>
 
-            <div className="hidden lg:flex items-center gap-8">
+            <div className="hidden lg:flex items-center gap-8 whitespace-nowrap">
               <Link
                 to="/services"
                 className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors relative group"
               >
-                Services
+                Dịch vụ
                 <span className="absolute -bottom-1 left-0 w-0 h-1 bg-primary rounded-full transition-all group-hover:w-full" />
               </Link>
 
@@ -85,7 +90,7 @@ const LandingPage = () => {
                 href="#gallery"
                 className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors relative group"
               >
-                Gallery
+                Thư viện
                 <span className="absolute -bottom-1 left-0 w-0 h-1 bg-primary rounded-full transition-all group-hover:w-full" />
               </a>
 
@@ -93,31 +98,74 @@ const LandingPage = () => {
                 href="#reviews"
                 className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors relative group"
               >
-                Reviews
+                Nhận xét
                 <span className="absolute -bottom-1 left-0 w-0 h-1 bg-primary rounded-full transition-all group-hover:w-full" />
               </a>
+
+              <Link
+                to="/shop"
+                className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors relative group flex items-center gap-1"
+              >
+                Cửa hàng
+                <span className="absolute -bottom-1 left-0 w-0 h-1 bg-primary rounded-full transition-all group-hover:w-full" />
+              </Link>
             </div>
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center gap-6 border-l border-gray-200 pl-6">
-              <Link
-                to="/login"
-                className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors"
-              >
-                Log In
-              </Link>
-              <Link to="/register">
-                <Button className="py-2.5 px-6 text-sm" variant="peach">
-                  Sign Up
-                </Button>
-              </Link>
+            <div className="hidden md:flex items-center gap-4 border-l border-gray-200 pl-3 ml-3">
+              {isAuthenticated ? (
+                <div className="relative group cursor-pointer flex items-center gap-2">
+                  <div className="w-10 h-10 bg-lavender rounded-full flex items-center justify-center shadow-sm">
+                    <User className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="font-bold text-gray-700">
+                    {user?.full_name?.split(" ")[0]}
+                  </span>
+
+                  {/* Dropdown Menu */}
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-clay-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 p-2 z-50">
+                    <Link
+                      to="/my-bookings" 
+                      className="block px-4 py-2 hover:bg-cream rounded-lg font-bold text-gray-600"
+                    >
+                      Lịch hẹn
+                    </Link>
+                    <Link
+                      to="/my-pets"
+                      className="block px-4 py-2 hover:bg-cream rounded-lg font-bold text-gray-600"
+                    >
+                      Thú cưng
+                    </Link>
+                    <button
+                      onClick={logout}
+                      className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-500 rounded-lg font-bold mt-1 flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" /> Logout
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="font-fredoka font-bold text-gray-500 hover:text-primary transition-colors whitespace-nowrap"
+                  >
+                    Đăng nhập
+                  </Link>
+                  <Link to="/register">
+                    <Button className="py-2.5 px-6 text-sm whitespace-nowrap">
+                      Đăng ký
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
               <Link to="/scan">
                 <Button
-                  className="hidden sm:flex py-3 px-6 text-sm gap-2"
+                  className="hidden sm:flex py-3 px-6 text-sm gap-2 whitespace-nowrap"
                   variant="outline"
                 >
                   <Scan className="w-4 h-4" /> Scan Pet
@@ -125,12 +173,26 @@ const LandingPage = () => {
               </Link>
               <Link to="/booking">
                 <Button
-                  className="hidden sm:flex py-3 px-8 text-sm"
+                  className="hidden sm:flex py-3 px-8 text-sm whitespace-nowrap"
                   variant="primary"
                 >
-                  Book Now
+                  Đặt lịch ngay!
                 </Button>
               </Link>
+
+              {/* Cart Toggle */}
+              <button
+                onClick={openCart}
+                className="relative w-12 h-12 flex items-center justify-center bg-cream rounded-full hover:bg-peach transition-colors shadow-clay-sm"
+              >
+                <ShoppingBag className="w-5 h-5 text-gray-700" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-secondary text-white text-xs font-bold flex items-center justify-center rounded-full animate-bounce">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+
               <button
                 className="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-cream shadow-clay-sm"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -211,8 +273,10 @@ const LandingPage = () => {
               transition={{ delay: 0.4 }}
               className="text-2xl text-gray-500 font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed"
             >
-              We don't just groom; we pamper. Give your best friend the luxury
-              experience they deserve in our joyful claymorphism-inspired spa.
+              Chúng tôi không chỉ chải chuốt; chúng tôi nuông chiều. Hãy mang
+              đến cho người bạn thân nhất của bạn trải nghiệm sang trọng mà họ
+              xứng đáng có được trong spa lấy cảm hứng từ chủ nghĩa đất sét vui
+              tươi của chúng tôi.
             </motion.p>
 
             <motion.div
@@ -223,7 +287,7 @@ const LandingPage = () => {
             >
               <Link to="/booking">
                 <Button className="text-xl px-10 py-6 group">
-                  Start Booking
+                  Đặt lịch ngay
                   <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
                 </Button>
               </Link>
@@ -248,9 +312,11 @@ const LandingPage = () => {
               className="absolute top-0 right-0 w-3/4 aspect-square rounded-blob overflow-hidden shadow-clay-lg border-[16px] border-white z-20"
             >
               <img
-                src="https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&q=80&w=800"
-                alt="Main Pet"
+                src="https://loremflickr.com/800/800/dog,spa?lock=100"
+                alt="Main Pet Spa"
                 className="w-full h-full object-cover"
+                loading="eager"
+                draggable={false}
               />
             </motion.div>
 
@@ -266,9 +332,11 @@ const LandingPage = () => {
               className="absolute bottom-10 left-0 w-1/2 aspect-[4/3] rounded-clay shadow-clay-md border-8 border-white z-30 overflow-hidden"
             >
               <img
-                src="https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&q=80&w=400"
-                alt="Small Pet"
+                src="https://loremflickr.com/400/400/pug,pet?lock=101"
+                alt="Small Pet Grooming"
                 className="w-full h-full object-cover"
+                loading="lazy"
+                draggable={false}
               />
             </motion.div>
 
@@ -315,65 +383,61 @@ const LandingPage = () => {
               Happy Clients
             </h2>
             <p className="text-xl text-gray-500 font-medium">
-              Drag the photos around! See the joy in our furry friends' eyes.
+              Kéo thả ảnh để khám phá khoảnh khắc đáng yêu của các bé thú cưng.
             </p>
           </div>
         </div>
 
         {/* Draggable Area */}
-        <div className="absolute inset-0 z-0">
+        {/* FIX: Use absolute position + responsive grid calculations instead of % to stop overlap */}
+        <div className="relative w-full h-[600px] mt-20 flex flex-wrap justify-center items-center gap-8 px-6">
           {[
             {
-              src: "https://images.unsplash.com/photo-1544568100-847a948585b9?auto=format&fit=crop&q=80&w=400",
+              src: "https://loremflickr.com/400/400/dog,smile?lock=102", // Happy Dog
               rotate: -5,
-              x: "10%",
-              y: "20%",
             },
             {
-              src: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&q=80&w=400",
+              src: "https://loremflickr.com/400/400/pug,towel?lock=103", // Pug in towel
               rotate: 8,
-              x: "60%",
-              y: "15%",
             },
             {
-              src: "https://images.unsplash.com/photo-1534361960057-19889db9621e?auto=format&fit=crop&q=80&w=400",
+              src: "https://loremflickr.com/400/400/shiba?lock=104", // Shiba
               rotate: -12,
-              x: "20%",
-              y: "50%",
             },
             {
-              src: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=400",
+              src: "https://loremflickr.com/400/400/cat,grooming?lock=105", // Cat grooming
               rotate: 5,
-              x: "70%",
-              y: "55%",
             },
             {
-              src: "https://images.unsplash.com/photo-1591768793355-74d7afb3604f?auto=format&fit=crop&q=80&w=400",
+              src: "https://loremflickr.com/400/400/cat,towel?lock=106", // Cat in towel
               rotate: -3,
-              x: "45%",
-              y: "35%",
             },
             {
-              src: "https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?auto=format&fit=crop&q=80&w=400",
+              src: "https://loremflickr.com/400/400/dog,running?lock=107", // Running dogs
               rotate: 10,
-              x: "40%",
-              y: "65%",
             },
           ].map((img, idx) => (
             <motion.div
               key={idx}
               drag
-              dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+              dragConstraints={{
+                left: -100,
+                right: 100,
+                top: -100,
+                bottom: 100,
+              }}
               dragElastic={0.9}
               dragTransition={{ bounceStiffness: 100, bounceDamping: 10 }}
               whileDrag={{ scale: 1.1, zIndex: 50, rotate: 0 }}
-              initial={{ x: img.x, y: img.y, rotate: img.rotate }}
-              className="absolute cursor-grab active:cursor-grabbing group p-4 bg-white rounded-clay shadow-clay-lg border-8 border-white w-64 aspect-[3/4]"
+              initial={{ rotate: img.rotate }}
+              className="relative cursor-grab active:cursor-grabbing group p-2 sm:p-4 bg-white rounded-clay shadow-clay-lg border-[6px] sm:border-8 border-white w-40 sm:w-64 aspect-[3/4] flex-shrink-0"
             >
               <img
                 src={img.src}
                 alt={`Gallery Pet ${idx}`}
                 className="w-full h-full object-cover rounded-[1rem] pointer-events-none"
+                loading="lazy"
+                draggable={false}
               />
               <div className="absolute top-4 right-4 bg-white/80 p-2 rounded-full shadow-clay-sm opacity-0 group-hover:opacity-100 transition-opacity">
                 <Heart className="w-5 h-5 text-red-400 fill-red-400" />
@@ -384,15 +448,140 @@ const LandingPage = () => {
 
         {/* Floating Elements */}
         <motion.div
-          animate={{ x: [-20, 20, -20], y: [-20, 20, -20] }}
+          animate={{ x: [-20, 20, -20] }}
           transition={{ duration: 10, repeat: Infinity }}
-          className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/10 rounded-blob blur-xl"
+          className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/20 rounded-blob blur-xl pointer-events-none"
+          style={{ willChange: "transform" }}
         />
         <motion.div
-          animate={{ x: [20, -20, 20], y: [20, -20, 20] }}
+          animate={{ y: [20, -20, 20] }}
           transition={{ duration: 12, repeat: Infinity }}
-          className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-secondary/10 rounded-blob blur-xl"
+          className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-secondary/20 rounded-blob blur-xl pointer-events-none"
+          style={{ willChange: "transform" }}
         />
+      </section>
+
+      {/* How It Works — 3 steps */}
+      <section className="py-32 bg-white/40 relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+          <div className="absolute top-1/4 -left-20 w-64 h-64 bg-peach/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 -right-20 w-64 h-64 bg-lavender/20 rounded-full blur-3xl" />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-20 space-y-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-2 px-5 py-2 bg-primary/10 rounded-full text-primary font-bold font-fredoka"
+            >
+              <Sparkles className="w-4 h-4" /> Đơn giản & Nhanh chóng
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-6xl font-fredoka font-bold text-gray-800"
+            >
+              Cách Hoạt Động
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-xl text-gray-500 font-medium max-w-xl mx-auto"
+            >
+              Chỉ 3 bước đơn giản để thú cưng của bạn được chăm sóc tốt nhất!
+            </motion.p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-10 relative">
+            {/* Connector line — aligned with icon center (icon is w-24 h-24, starts at mt-4 below step badge) */}
+
+            {[
+              {
+                step: "01",
+                icon: <Scan className="w-10 h-10" />,
+                title: "Scan Thú Cưng",
+                desc: "Dùng AI Scanner để nhận diện giống thú cưng và nhận gợi ý dịch vụ phù hợp nhất.",
+                color: "bg-primary",
+                bg: "bg-primary/5",
+                delay: 0,
+              },
+              {
+                step: "02",
+                icon: <Scissors className="w-10 h-10" />,
+                title: "Chọn Dịch Vụ",
+                desc: "Xem bảng giá và chọn gói chăm sóc phù hợp với nhu cầu của thú cưng bạn.",
+                color: "bg-peach",
+                bg: "bg-peach/10",
+                delay: 0.15,
+              },
+              {
+                step: "03",
+                icon: <Calendar className="w-10 h-10" />,
+                title: "Đặt Lịch Ngay",
+                desc: "Chọn ngày giờ thuận tiện và nhận xác nhận lịch hẹn tức thì qua hệ thống.",
+                color: "bg-secondary",
+                bg: "bg-secondary/5",
+                delay: 0.3,
+              },
+            ].map((item) => (
+              <motion.div
+                key={item.step}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: item.delay, duration: 0.5 }}
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                className={`relative ${item.bg} rounded-clay p-10 shadow-clay-md border-2 border-white flex flex-col items-center text-center gap-6 cursor-default`}
+              >
+                {/* Step number badge */}
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 bg-white rounded-full shadow-clay-sm flex items-center justify-center">
+                  <span className="font-fredoka font-bold text-primary text-sm">
+                    {item.step}
+                  </span>
+                </div>
+
+                {/* Icon */}
+                <div
+                  className={`w-24 h-24 ${item.color} rounded-full flex items-center justify-center shadow-clay-md text-white mt-4`}
+                >
+                  {item.icon}
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-2xl font-fredoka font-bold text-gray-800">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-500 font-medium leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="text-center mt-16"
+          >
+            <Link to="/booking">
+              <Button className="text-xl px-12 py-5 group">
+                Bắt đầu ngay
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+              </Button>
+            </Link>
+          </motion.div>
+        </div>
       </section>
 
       {/* Task 8, 9: Testimonials & Footer */}
@@ -403,17 +592,17 @@ const LandingPage = () => {
               {
                 name: "Sarah Miller",
                 pet: "Golden Retriever",
-                text: "Pawsitive logic is just magic! Buddy looks like a cloud after his Royal Spa session.",
+                text: "Pawsitive đúng là phép màu! Buddy nhìn như một đám mây nhỏ sau khi sử dụng gói Royal Spa.",
               },
               {
                 name: "David Chen",
                 pet: "Persian Cat",
-                text: "Clean, professional, and full of love. My cat usually hates water but he stayed so calm here.",
+                text: "Rất sạch sẽ, làm việc chuyên nghiệp và chăm bé cực kỳ có tâm. Mèo mình bình thường ghét tắm lắm mà hôm nay ngoan xỉu luôn.",
               },
               {
                 name: "Emma Watson",
                 pet: "Shiba Inu",
-                text: "The most aesthetic pet spa I have ever seen. And the groomers are true pet lovers!",
+                text: "Spa thú cưng có không gian thẩm mỹ nhất mà mình từng ghé. Đội ngũ groomer đều là những người yêu thú cưng thực sự.",
               },
             ].map((item, idx) => (
               <Card key={idx} variant="white" className="relative">
@@ -431,7 +620,14 @@ const LandingPage = () => {
                     "{item.text}"
                   </p>
                   <div className="flex items-center gap-4 pt-4 border-t border-black/5">
-                    <div className="w-14 h-14 bg-lavender rounded-full shadow-clay-inner" />
+                    {/* Fixed Avatar using Unsplash placeholders */}
+                    <div className="w-14 h-14 bg-lavender rounded-full shadow-clay-inner overflow-hidden border-2 border-white">
+                      <img
+                        src={`https://ui-avatars.com/api/?name=${item.name.replace(" ", "+")}&background=E3DCFA&color=664cc3&bold=true`}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                     <div>
                       <div className="font-fredoka font-bold text-gray-800 text-lg">
                         {item.name}
@@ -460,8 +656,8 @@ const LandingPage = () => {
               </span>
             </div>
             <p className="text-gray-500 font-medium leading-relaxed">
-              Luxury grooming experiences for your best friends. We combine
-              style with a gentle, loving touch.
+              Chăm sóc thú cưng chuẩn cao cấp – nhẹ nhàng, tinh tế và tràn đầy
+              yêu thương.
             </p>
             <div className="flex gap-4">
               <motion.div
@@ -481,20 +677,25 @@ const LandingPage = () => {
 
           {[
             {
-              title: "Links",
-              items: ["Services", "Gallery", "Booking", "Reviews"],
+              title: "Khám Phá",
+              items: ["Dịch vụ", "Hình ảnh", "Đặt lịch", "Đánh giá khách hàng"],
             },
             {
-              title: "Support",
-              items: ["Help Center", "Safety Rules", "Privacy", "Terms"],
-            },
-            {
-              title: "Contact",
+              title: "Hỗ Trợ",
               items: [
-                "+84 912 345 678",
-                "groom@pawsitive.pet",
-                "123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
-                "Mon-Sun: 9am-6pm",
+                "Trung tâm hỗ trợ",
+                "Quy tắc an toàn",
+                "Chính sách riêng tư",
+                "Điều khoản dịch vụ",
+              ],
+            },
+            {
+              title: "Liên Hệ",
+              items: [
+                "Điện thoại: 0912 345 678",
+                "Email: groom@pawsitive.pet",
+                "Địa chỉ: 58 Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh",
+                "Giờ hoạt động: 9:00 - 23:00 (Thứ 2 - Chủ nhật)",
               ],
             },
           ].map((col) => (
@@ -516,7 +717,8 @@ const LandingPage = () => {
           ))}
         </div>
         <div className="max-w-7xl mx-auto px-6 pt-20 mt-20 border-t border-black/5 text-center text-gray-400 font-bold italic">
-          © 2024 Pawsitive Pet Spa. Pure Love for Your Best Friends.
+          © 2024 Pawsitive Pet Spa. Yêu thương trọn vẹn dành cho những người bạn
+          thân yêu.
         </div>
       </footer>
     </div>

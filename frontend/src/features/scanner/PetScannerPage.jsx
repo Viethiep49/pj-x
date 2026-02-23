@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Scan, PawPrint, X, RefreshCw, Sparkles, AlertCircle, Loader } from 'lucide-react';
+import { Upload, Scan, PawPrint, X, RefreshCw, Sparkles, AlertCircle, Loader, ShoppingBag, CalendarDays } from 'lucide-react';
 import * as tf from '@tensorflow/tfjs';
+import { useNavigate } from 'react-router-dom';
 
 // --- API Configuration ---
 const API_URL = 'http://localhost:8000'; // Ensure this matches your backend
 
 // --- Component ---
 const PetScannerPage = () => {
+    const navigate = useNavigate();
     const [image, setImage] = useState(null);
     const [preview, setPreview] = useState(null);
     const [result, setResult] = useState(null);
@@ -59,7 +62,7 @@ const PetScannerPage = () => {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) {
-                setError("File size too large (max 5MB)");
+                setError("Kích thước file quá lớn (tối đa 5MB)");
                 return;
             }
             setImage(file);
@@ -131,7 +134,7 @@ const PetScannerPage = () => {
 
         } catch (err) {
             console.error("Scan error:", err);
-            setError("Failed to identify breed. Please try another image.");
+            setError("Không thể nhận diện giống thú cưng. Vui lòng thử ảnh khác.");
         } finally {
             setLoading(false);
         }
@@ -180,14 +183,14 @@ const PetScannerPage = () => {
                         Pet <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-400">Scanner</span>
                     </h1>
                     <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-                        Upload a photo of your furry friend and let our AI magically identify their breed!
+                        Tải lên ảnh thú cưng của bạn và AI sẽ giúp bạn nhận diện giống loài một cách thần kỳ!
                     </p>
 
                     {/* Model Status Indicator */}
                     {!isModelReady && !modelLoadingError && (
                         <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-400">
                             <Loader className="w-4 h-4 animate-spin" />
-                            <span>Runing AI Model on your browser...</span>
+                            <span>Đang khởi động AI Model trên trình duyệt...</span>
                         </div>
                     )}
                     {modelLoadingError && (
@@ -242,9 +245,9 @@ const PetScannerPage = () => {
                                 <div className="w-20 h-20 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
                                     <Upload className="w-8 h-8" />
                                 </div>
-                                <h3 className="text-xl font-bold text-slate-700 mb-2">Click to Upload</h3>
-                                <p className="text-slate-400">or drag and drop your photo here</p>
-                                <p className="text-xs text-slate-300 mt-4">Supports JPG, PNG (Max 5MB)</p>
+                                <h3 className="text-xl font-bold text-slate-700 mb-2">Nhấn để Tải ảnh lên</h3>
+                                <p className="text-slate-400">hoặc kéo thả ảnh vào đây</p>
+                                <p className="text-xs text-slate-300 mt-4">Hỗ trợ JPG, PNG (Tối đa 5MB)</p>
                             </div>
                         ) : (
                             <div className="relative rounded-2xl overflow-hidden bg-slate-900 aspect-video sm:aspect-[4/3] shadow-inner group">
@@ -259,7 +262,7 @@ const PetScannerPage = () => {
                                             className="absolute left-0 right-0 h-1 bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.8)]"
                                         />
                                         <div className="absolute inset-x-0 bottom-8 text-center text-white font-bold tracking-widest uppercase animate-pulse">
-                                            Analyzing Breed DNA...
+                                            Đang phân tích giống loài...
                                         </div>
                                     </div>
                                 )}
@@ -292,7 +295,7 @@ const PetScannerPage = () => {
                                 >
                                     <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></span>
                                     <Scan className="w-6 h-6" />
-                                    <span>Identify Breed</span>
+                                    <span>Bắt đầu nhận diện</span>
                                 </button>
                             </motion.div>
                         )}
@@ -308,25 +311,28 @@ const PetScannerPage = () => {
 
                                 <div className="relative z-10">
                                     <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold mb-4">
-                                        <Sparkles className="w-4 h-4" /> Match Found!
+                                        <Sparkles className="w-4 h-4" /> Nhận diện thành công!
                                     </div>
                                     <h2 className="text-3xl sm:text-4xl font-black text-slate-800 mb-2">
                                         {result.breed}
                                     </h2>
                                     <p className="text-slate-500 mb-6 flex items-center justify-center gap-2">
-                                        Confidence Score:
+                                        Độ chính xác:
                                         <span className="font-bold text-emerald-600">{result.confidence}</span>
                                     </p>
 
-                                    <div className="flex justify-center gap-4">
+                                    <div className="flex flex-col sm:flex-row justify-center gap-4">
                                         <button
                                             onClick={resetScanner}
-                                            className="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors flex items-center gap-2"
+                                            className="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
                                         >
-                                            <RefreshCw className="w-4 h-4" /> Scan Another
+                                            <RefreshCw className="w-4 h-4" /> Quét ảnh lại
                                         </button>
-                                        <button className="px-6 py-2.5 bg-slate-800 text-white rounded-xl font-medium hover:bg-slate-700 transition-colors shadow-lg hover:shadow-slate-800/20">
-                                            Book Appointment
+                                        <button onClick={() => navigate('/booking')} className="px-6 py-2.5 bg-slate-800 text-white rounded-xl font-medium hover:bg-slate-700 transition-colors shadow-lg hover:shadow-slate-800/20 flex items-center justify-center gap-2">
+                                            <CalendarDays className="w-4 h-4" /> Đặt lịch Spa
+                                        </button>
+                                        <button onClick={() => navigate('/shop')} className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-emerald-600/20 flex items-center justify-center gap-2">
+                                            <ShoppingBag className="w-4 h-4" /> Xem gợi ý mua sắm
                                         </button>
                                     </div>
                                 </div>
@@ -337,7 +343,7 @@ const PetScannerPage = () => {
 
                 {/* Footer Note */}
                 <p className="text-center text-slate-400 text-sm mt-8">
-                    Note: AI results are estimates. Always consult a professional for confirmation.
+                    Lưu ý: Kết quả từ AI mang tính tham khảo. Vui lòng hỏi tư vấn chuyên gia để có thông tin chính xác.
                 </p>
             </motion.div>
         </div>

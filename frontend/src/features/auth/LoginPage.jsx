@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import { PawPrint, ArrowLeft } from 'lucide-react';
-import { loginUser } from './authService';
+import { useAuth } from '../../contexts/AuthContext';
+import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
+import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props';
+import api from '../../services/api';
 
 const LoginPage = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+    const location = useLocation();
+    const { login } = useAuth();
+
+    const from = location.state?.from?.pathname || '/';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -18,13 +25,39 @@ const LoginPage = () => {
         setError(null);
 
         try {
-            const data = await loginUser(formData.email, formData.password);
-            localStorage.setItem('token', data.token);
-            navigate('/');
+            const user = await login(formData.email, formData.password);
+            navigate(user.role === 'admin' || user.role === 'staff' ? '/admin' : from, { replace: true });
         } catch (err) {
-            setError(err.message);
+            setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleGoogleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            try {
+                // Send access token to backend
+                // await socialLogin(tokenResponse.access_token, 'google');
+                alert("Google Login Success! Integration pending credentials.");
+            } catch (err) {
+                setError('Google setup incomplete.');
+            }
+        },
+        onError: () => setError('Google Login Failed')
+    });
+
+    const responseFacebook = async (response) => {
+        if (response.accessToken) {
+            try {
+                // Send access token to backend
+                // await socialLogin(response.accessToken, 'facebook');
+                alert("Facebook Login Success! Integration pending credentials.");
+            } catch (err) {
+                setError('Facebook setup incomplete.');
+            }
+        } else {
+            setError('Facebook Login Failed');
         }
     };
 
@@ -69,32 +102,72 @@ const LoginPage = () => {
                         required
                     />
 
-                    <div className="flex items-center justify-between text-sm px-2">
-                        <label className="flex items-center gap-2 cursor-pointer font-bold text-gray-500">
-                            <input type="checkbox" className="rounded-full border-2 border-cream text-primary focus:ring-primary/20" />
-                            <span>Stay logged in</span>
-                        </label>
-                        <a href="#" className="text-primary font-bold hover:underline">Forgot?</a>
-                    </div>
-
-                    <Button
-                        type="submit"
-                        className="w-full py-5 text-xl mt-4"
-                        disabled={isLoading}
-                    >
+                    <Button type="submit" className="w-full py-5 text-xl mt-4" disabled={isLoading}>
                         {isLoading ? 'Wait a paw...' : 'Sign in'}
                     </Button>
                 </form>
 
+                <div className="my-8 flex items-center justify-center gap-4">
+                    <div className="h-0.5 w-full bg-cream"></div>
+                    <span className="text-gray-400 font-bold whitespace-nowrap">Or continue with</span>
+                    <div className="h-0.5 w-full bg-cream"></div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full flex justify-center items-center gap-2 py-4 shadow-sm hover:bg-gray-50 bg-white"
+                        onClick={() => handleGoogleLogin()}
+                    >
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5" />
+                        Google
+                    </Button>
+
+                    {import.meta.env.VITE_FACEBOOK_APP_ID ? (
+                        <FacebookLogin
+                            appId={import.meta.env.VITE_FACEBOOK_APP_ID}
+                            autoLoad={false}
+                            fields="name,email,picture"
+                            callback={responseFacebook}
+                            render={renderProps => (
+                                <Button
+                                    type="button"
+                                    onClick={renderProps.onClick}
+                                    className="w-full flex justify-center items-center gap-2 py-4 bg-[#1877F2] hover:bg-[#166FE5] border-transparent text-white shadow-sm"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                                    Facebook
+                                </Button>
+                            )}
+                        />
+                    ) : (
+                        <Button
+                            type="button"
+                            onClick={responseFacebook}
+                            className="w-full flex justify-center items-center gap-2 py-4 bg-[#1877F2] hover:bg-[#166FE5] border-transparent text-white shadow-sm disabled:opacity-50"
+                        >
+                            <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                            Facebook
+                        </Button>
+                    )}
+                </div>
+
                 <div className="mt-10 text-center font-bold text-gray-500">
                     New to Pawsitive?{' '}
-                    <Link to="/register" className="text-primary hover:underline">
-                        Join our pack
-                    </Link>
+                    <Link to="/register" className="text-primary hover:underline">Join our pack</Link>
                 </div>
             </Card>
         </div>
     );
 };
 
-export default LoginPage;
+const LoginPageWithProvider = () => {
+    return (
+        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || "placeholder-client-id"}>
+            <LoginPage />
+        </GoogleOAuthProvider>
+    );
+};
+
+export default LoginPageWithProvider;

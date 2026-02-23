@@ -1,26 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProductTable from "./ProductTable";
 import ProductForm from "./ProductForm";
+import api from "../../services/api";
 
 export default function ProductPage() {
   const [products, setProducts] = useState([]);
   const [editing, setEditing] = useState(null);
 
-  const addOrUpdate = (product) => {
-    setProducts((prev) => {
-      // UPDATE
-      if (product.id) {
-        return prev.map((p) => (p.id === product.id ? product : p));
-      }
-      // ADD
-      return [...prev, { ...product, id: Date.now() }];
-    });
-
-    setEditing(null);
+  const fetchProducts = async () => {
+    try {
+      const res = await api.get('/products');
+      setProducts(res.data.data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const deleteProduct = (id) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const addOrUpdate = async (product) => {
+    try {
+      if (product.id) {
+        await api.put(`/products/${product.id}`, product);
+      } else {
+        await api.post('/products', product);
+      }
+      fetchProducts();
+      setEditing(null);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error saving product');
+    }
+  };
+
+  const deleteProduct = async (id) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    try {
+      await api.delete(`/products/${id}`);
+      fetchProducts();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error deleting product');
+    }
   };
 
   return (
