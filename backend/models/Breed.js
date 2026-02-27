@@ -1,14 +1,14 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Service = sequelize.define("services", {
+const Breed = sequelize.define("breeds", {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-  name: DataTypes.STRING(100),
+  name: { type: DataTypes.STRING(100), unique: true },
+  display_name: DataTypes.STRING(100),
+  species: DataTypes.STRING(10),
+  fur_type: DataTypes.STRING(20),
+  size_category: DataTypes.STRING(20),
   description: DataTypes.TEXT,
-  price: DataTypes.DECIMAL(12, 2),
-  duration_minutes: DataTypes.INTEGER,
-  target_species: DataTypes.STRING(20),
-  is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
   image_url: DataTypes.TEXT,
 }, {
   timestamps: true,
@@ -16,4 +16,4 @@ const Service = sequelize.define("services", {
   updatedAt: false,
 });
 
-export default Service;
+export default Breed;

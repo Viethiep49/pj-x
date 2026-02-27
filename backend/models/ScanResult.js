@@ -1,18 +1,18 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Appointment = sequelize.define("appointments", {
+const ScanResult = sequelize.define("scan_results", {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   user_id: DataTypes.UUID,
   pet_id: DataTypes.UUID,
-  service_id: DataTypes.UUID,
-  appointment_date: DataTypes.DATE,
-  status: { type: DataTypes.STRING(20), defaultValue: "pending" },
-  notes: DataTypes.TEXT,
+  breed_id: DataTypes.UUID,
+  confidence: DataTypes.DECIMAL(5, 4),
+  image_url: DataTypes.TEXT,
+  top_3_predictions: DataTypes.JSONB,
 }, {
   timestamps: true,
   createdAt: "created_at",
-  updatedAt: "updated_at",
+  updatedAt: false,
 });
 
-export default Appointment;
+export default ScanResult;
