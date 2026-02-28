@@ -1,25 +1,55 @@
-export const getAllPets = (req, res) => {
-  res.status(200).json({ message: "Get all pets" });
-}
+import Pet from "../../models/Pet.js";
 
-export const getPetById = (req, res) => {
-  const { id } = req.params;
-  res.status(200).json({ message: `Get pet with ID: ${id}` });
-}
+/* GET /api/pets */
+export const getAllPets = async (req, res) => {
+  try {
+    const pets = await Pet.findAll();
+    res.json(pets);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
-export const createPet = (req, res) => {
-  const { name, type } = req.body;
-  res.status(201).json({ message: `Create pet with name: ${name} and type: ${type}` });
-}
+/* POST /api/pets */
+export const createPet = async (req, res) => {
+  try {
+    const pet = await Pet.create(req.body);
+    res.status(201).json(pet);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
 
-export const updatePet = (req, res) => {
-  const { id } = req.params;
-  const { name, type } = req.body;
-  res.status(200).json({ message: `Update pet with ID: ${id}, new name: ${name}, new type: ${type}` });
-}
+/* PUT /api/pets/:id */
+export const updatePet = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-export const deletePet = (req, res) => {
-  const { id } = req.params;
-  res.status(200).json({ message: `Delete pet with ID: ${id}` });
-}
+    const pet = await Pet.findByPk(id);
+    if (!pet) {
+      return res.status(404).json({ message: "Pet not found" });
+    }
 
+    await pet.update(req.body);
+    res.json(pet);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+/* DELETE /api/pets/:id */
+export const deletePet = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const pet = await Pet.findByPk(id);
+    if (!pet) {
+      return res.status(404).json({ message: "Pet not found" });
+    }
+
+    await pet.destroy();
+    res.json({ message: "Deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

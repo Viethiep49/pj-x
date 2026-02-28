@@ -1,4 +1,4 @@
-import sequelize from "../config/database.js";
+import sequelize from "../src/config/db.js";
 
 import User from "./User.js";
 import ProductCategory from "./ProductCategory.js";
@@ -26,7 +26,7 @@ ProductReview.belongsTo(User, { foreignKey: "user_id" });
 
 /* Pets */
 Pet.belongsTo(User, { foreignKey: "owner_id" });
-Pet.belongsTo(Breed, { foreignKey: "breed_id" });
+Pet.belongsTo(Breed, { foreignKey: "breed_id", as: "breedInfo" });
 
 /* Scan results */
 ScanResult.belongsTo(User, { foreignKey: "user_id" });
