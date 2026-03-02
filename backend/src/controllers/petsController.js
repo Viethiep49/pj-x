@@ -13,10 +13,12 @@ export const getAllPets = async (req, res) => {
 /* POST /api/pets */
 export const createPet = async (req, res) => {
   try {
+    console.log("Creating pet with data:", req.body);
     const pet = await Pet.create(req.body);
     res.status(201).json(pet);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error("Create pet error:", err);
+    res.status(400).json({ message: err.message, errors: err.errors });
   }
 };
 

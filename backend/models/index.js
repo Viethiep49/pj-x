@@ -40,6 +40,7 @@ BreedRecommendation.belongsTo(Service, { foreignKey: "service_id" });
 
 /* Orders */
 Order.belongsTo(User, { foreignKey: "user_id" });
+Order.hasMany(OrderItem, { foreignKey: "order_id", as: "items" });
 
 OrderItem.belongsTo(Order, { foreignKey: "order_id" });
 OrderItem.belongsTo(Product, { foreignKey: "product_id" });

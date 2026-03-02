@@ -3,7 +3,8 @@ import express from "express";
 import {
   confirmAppointment,
   completeAppointment,
-  cancelAppointment
+  cancelAppointment,
+  getAllAppointmentsForAdmin
 } from "../controllers/admin/appointmentsAdminController.js";
 
 import {
@@ -13,6 +14,9 @@ import {
 } from "../controllers/admin/ordersAdminController.js";
 
 const router = express.Router();
+
+// GET /api/admin/appointments
+router.get("/appointments", getAllAppointmentsForAdmin);
 
 /* appointments */
 router.patch("/appointments/:id/confirm", confirmAppointment);

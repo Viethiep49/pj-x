@@ -9,8 +9,6 @@ import appointmentsRouters from "./routes/appointmentsRouters.js";
 import vaccinationsRouters from "./routes/vaccinationsRouters.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
-
-
 dotenv.config();
 
 const app = express();
@@ -30,7 +28,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await sequelize.authenticate();
-    await sequelize.sync();   // tạo bảng pets nếu chưa có
+    await sequelize.sync({ force: true }); // xóa và tạo lại bảng
 
     console.log("Database connected");
 

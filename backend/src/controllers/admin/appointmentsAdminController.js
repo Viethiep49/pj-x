@@ -35,3 +35,32 @@ export const cancelAppointment = async (req, res) => {
 
   res.json(appt);
 };
+/*
+GET /api/admin/appointments
+*/
+export const getAllAppointmentsForAdmin = async (req, res) => {
+  try {
+    const appointments = await Appointment.findAll({
+      order: [["appointment_date", "DESC"]],
+      include: [
+        {
+          model: User,
+          attributes: ["id", "full_name", "email", "phone_number"]
+        },
+        {
+          model: Pet,
+          attributes: ["id", "name", "species"]
+        },
+        {
+          model: Service,
+          attributes: ["id", "name", "price"]
+        }
+      ]
+    });
+
+    res.json(appointments);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Get all appointments failed" });
+  }
+};
