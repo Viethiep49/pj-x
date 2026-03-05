@@ -1,57 +1,117 @@
-import Pet from "../../models/Pet.js";
+import Pet from "../models/Pet.js";
 
-/* GET /api/pets */
-export const getAllPets = async (req, res) => {
+/**
+ * GET /api/pets
+ * List pets by owner
+ * ?owner_id=uuid
+ */
+export const getPets = async (req, res) => {
   try {
-    const pets = await Pet.findAll();
-    res.json(pets);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const { owner_id } = req.query;
+
+    if (!owner_id) {
+      return res.status(400).json({
+        success: false,
+        message: "owner_id is required",
+      });
+    }
+
+    const pets = await Pet.findAll({
+      where: { owner_id },
+      order: [["created_at", "DESC"]],
+    });
+
+    res.json({
+      success: true,
+      count: pets.length,
+      data: pets,
+    });
+  } catch (error) {
+    console.error("Get pets error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
-/* POST /api/pets */
+/**
+ * POST /api/pets
+ * Create pet
+ */
 export const createPet = async (req, res) => {
   try {
-    console.log("Creating pet with data:", req.body);
     const pet = await Pet.create(req.body);
-    res.status(201).json(pet);
-  } catch (err) {
-    console.error("Create pet error:", err);
-    res.status(400).json({ message: err.message, errors: err.errors });
+
+    res.status(201).json({
+      success: true,
+      message: "Pet created",
+      data: pet,
+    });
+  } catch (error) {
+    console.error("Create pet error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
-/* PUT /api/pets/:id */
+/**
+ * PUT /api/pets/:id
+ */
 export const updatePet = async (req, res) => {
   try {
-    const { id } = req.params;
+    const pet = await Pet.findByPk(req.params.id);
 
-    const pet = await Pet.findByPk(id);
     if (!pet) {
-      return res.status(404).json({ message: "Pet not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Pet not found",
+      });
     }
 
     await pet.update(req.body);
-    res.json(pet);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+
+    res.json({
+      success: true,
+      message: "Pet updated",
+      data: pet,
+    });
+  } catch (error) {
+    console.error("Update pet error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
 
-/* DELETE /api/pets/:id */
+/**
+ * DELETE /api/pets/:id
+ */
 export const deletePet = async (req, res) => {
   try {
-    const { id } = req.params;
+    const pet = await Pet.findByPk(req.params.id);
 
-    const pet = await Pet.findByPk(id);
     if (!pet) {
-      return res.status(404).json({ message: "Pet not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Pet not found",
+      });
     }
 
     await pet.destroy();
-    res.json({ message: "Deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+
+    res.json({
+      success: true,
+      message: "Pet deleted",
+    });
+  } catch (error) {
+    console.error("Delete pet error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };

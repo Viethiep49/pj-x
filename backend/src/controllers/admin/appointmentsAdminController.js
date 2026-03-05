@@ -1,66 +1,35 @@
-import Appointment from "../../../models/Appointment.js";
+import Appointment from "../../models/Appointment.js";
 
-export const confirmAppointment = async (req, res) => {
-  const { id } = req.params;
-
-  const appt = await Appointment.findByPk(id);
-  if (!appt) return res.status(404).json({ message: "Appointment not found" });
-
-  appt.status = "confirmed";
-  await appt.save();
-
-  res.json(appt);
-};
-
-export const completeAppointment = async (req, res) => {
-  const { id } = req.params;
-
-  const appt = await Appointment.findByPk(id);
-  if (!appt) return res.status(404).json({ message: "Appointment not found" });
-
-  appt.status = "completed";
-  await appt.save();
-
-  res.json(appt);
-};
-
-export const cancelAppointment = async (req, res) => {
-  const { id } = req.params;
-
-  const appt = await Appointment.findByPk(id);
-  if (!appt) return res.status(404).json({ message: "Appointment not found" });
-
-  appt.status = "cancelled";
-  await appt.save();
-
-  res.json(appt);
-};
-/*
-GET /api/admin/appointments
-*/
-export const getAllAppointmentsForAdmin = async (req, res) => {
+/**
+ * PUT /api/admin/appointments/:id
+ * confirm / cancel
+ */
+export const updateAppointmentStatus = async (req, res) => {
   try {
-    const appointments = await Appointment.findAll({
-      order: [["appointment_date", "DESC"]],
-      include: [
-        {
-          model: User,
-          attributes: ["id", "full_name", "email", "phone_number"]
-        },
-        {
-          model: Pet,
-          attributes: ["id", "name", "species"]
-        },
-        {
-          model: Service,
-          attributes: ["id", "name", "price"]
-        }
-      ]
+
+    const { status } = req.body;
+
+    const appointment = await Appointment.findByPk(req.params.id);
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found"
+      });
+    }
+
+    await appointment.update({
+      status
     });
 
-    res.json(appointments);
+    res.json({
+      success: true,
+      message: "Appointment updated",
+      data: appointment
+    });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Get all appointments failed" });
+    console.error("Update appointment error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

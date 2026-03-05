@@ -1,83 +1,139 @@
-import { Order, OrderItem } from "../../models/index.js";
-import sequelize from "../config/db.js";
+import Order from "../models/Order.js";
 
-/* GET /api/orders */
-export const getOrders = async (req, res) => {
+/**
+ * POST /api/orders
+ * Create order (User)
+ */
+export const createOrder = async (req, res) => {
   try {
+    const {
+      user_id,
+      total_amount,
+      delivery_method,
+      shipping_address,
+      shipping_fee,
+      receiver_name,
+      receiver_phone,
+      notes
+    } = req.body;
+
+    const orderNumber = "ORD-" + Date.now();
+
+    const order = await Order.create({
+      user_id,
+      order_number: orderNumber,
+      total_amount,
+      delivery_method,
+      shipping_address,
+      shipping_fee,
+      receiver_name,
+      receiver_phone,
+      notes
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Order created",
+      data: order
+    });
+
+  } catch (error) {
+    console.error("Create order error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+/**
+ * GET /api/orders
+ * Order history (User)
+ */
+export const getUserOrders = async (req, res) => {
+  try {
+
+    const { user_id } = req.query;
+
     const orders = await Order.findAll({
-      include: [
-        {
-          model: OrderItem,
-          as: "items"
-        }
-      ],
+      where: { user_id },
       order: [["created_at", "DESC"]]
     });
 
-    res.json(orders);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: "Get orders failed" });
-  }
-};
-
-/* GET /api/orders/:id */
-export const getOrderById = async (req, res) => {
-  try {
-    const order = await Order.findByPk(req.params.id, {
-      include: [
-        {
-          model: OrderItem,
-          as: "items"
-        }
-      ]
+    res.json({
+      success: true,
+      count: orders.length,
+      data: orders
     });
 
-    if (!order)
-      return res.status(404).json({ message: "Order not found" });
-
-    res.json(order);
-  } catch (e) {
-    res.status(500).json({ message: "Get order failed" });
+  } catch (error) {
+    console.error("Get user orders error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 };
 
-/* POST /api/orders */
-export const createOrder = async (req, res) => {
-  const t = await sequelize.transaction();
-
+/**
+ * GET /api/admin/orders
+ * Admin - get all orders
+ */
+export const getAllOrders = async (req, res) => {
   try {
-    const {
-      items,
-      ...orderData
-    } = req.body;
 
-    if (!items || !items.length) {
-      return res.status(400).json({ message: "Order items is required" });
+    const orders = await Order.findAll({
+      order: [["created_at", "DESC"]]
+    });
+
+    res.json({
+      success: true,
+      count: orders.length,
+      data: orders
+    });
+
+  } catch (error) {
+    console.error("Get all orders error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+/**
+ * PUT /api/admin/orders/:id
+ * Admin update order status
+ */
+export const updateOrderStatus = async (req, res) => {
+  try {
+
+    const { status } = req.body;
+
+    const order = await Order.findByPk(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found"
+      });
     }
 
-    const order = await Order.create(orderData, { transaction: t });
-
-    const orderItems = items.map(i => ({
-      ...i,
-      order_id: order.id
-    }));
-
-    await OrderItem.bulkCreate(orderItems, { transaction: t });
-
-    await t.commit();
-
-    const result = await Order.findByPk(order.id, {
-      include: [{ model: OrderItem, as: "items" }]
+    await order.update({
+      status
     });
 
-    res.status(201).json(result);
-  } catch (e) {
-    await t.rollback();
-    console.error(e);
-    res.status(400).json({
-      message: "Create order failed",
-      error: e.message
+    res.json({
+      success: true,
+      message: "Order status updated",
+      data: order
+    });
+
+  } catch (error) {
+    console.error("Update order error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
     });
   }
 };

@@ -1,137 +1,109 @@
-import { Op } from "sequelize";
-import Appointment from "../../models/Appointment.js";
+import Appointment from "../models/Appointment.js";
 
-/* GET /api/appointments */
-export const getAppointments = async (req, res) => {
-  try {
-    const where = {};
-
-    if (req.query.user_id) where.user_id = req.query.user_id;
-    if (req.query.pet_id) where.pet_id = req.query.pet_id;
-    if (req.query.status) where.status = req.query.status;
-
-    const data = await Appointment.findAll({
-      where,
-      order: [["appointment_date", "DESC"]]
-    });
-
-    res.json(data);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Get appointments failed" });
-  }
-};
-
-/* GET /api/appointments/:id */
-export const getAppointmentById = async (req, res) => {
-  try {
-    const apm = await Appointment.findByPk(req.params.id);
-
-    if (!apm)
-      return res.status(404).json({ message: "Appointment not found" });
-
-    res.json(apm);
-  } catch (err) {
-    res.status(500).json({ message: "Get appointment failed" });
-  }
-};
-
-/* POST /api/appointments */
+/**
+ * POST /api/appointments
+ * Create appointment
+ */
 export const createAppointment = async (req, res) => {
   try {
-    const appointment = await Appointment.create(req.body);
-    res.status(201).json(appointment);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({
-      message: "Create appointment failed",
-      error: err.message
+    const { user_id, pet_id, service_id, appointment_time, notes } = req.body;
+
+    const appointment = await Appointment.create({
+      user_id,
+      pet_id,
+      service_id,
+      appointment_time,
+      notes
     });
+
+    res.status(201).json({
+      success: true,
+      message: "Appointment created",
+      data: appointment
+    });
+
+  } catch (error) {
+    console.error("Create appointment error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-/* PUT /api/appointments/:id */
-export const updateAppointment = async (req, res) => {
+/**
+ * GET /api/appointments
+ * User booking history
+ */
+export const getAppointments = async (req, res) => {
   try {
-    const apm = await Appointment.findByPk(req.params.id);
 
-    if (!apm)
-      return res.status(404).json({ message: "Appointment not found" });
+    const { user_id } = req.query;
 
-    await apm.update({
-      ...req.body,
-      updated_at: new Date()
+    const where = {};
+
+    if (user_id) where.user_id = user_id;
+
+    const appointments = await Appointment.findAll({
+      where,
+      order: [["appointment_time", "DESC"]]
     });
 
-    res.json(apm);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({
-      message: "Update appointment failed",
-      error: err.message
+    res.json({
+      success: true,
+      count: appointments.length,
+      data: appointments
     });
+
+  } catch (error) {
+    console.error("Get appointments error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-/*
-GET /api/appointments/slots?date=YYYY-MM-DD
-*/
+/**
+ * GET /api/appointments/slots
+ * Get available time slots
+ */
 export const getAvailableSlots = async (req, res) => {
   try {
+
     const { date } = req.query;
 
     if (!date) {
-      return res.status(400).json({ message: "date is required (YYYY-MM-DD)" });
+      return res.status(400).json({
+        success: false,
+        message: "Date is required"
+      });
     }
 
-    const startHour = 8;
-    const endHour = 17;
-    const slotMinutes = 30;
-
-    const dayStart = new Date(`${date}T00:00:00`);
-    const dayEnd = new Date(`${date}T23:59:59`);
-
-    const appointments = await Appointment.findAll({
+    const booked = await Appointment.findAll({
       where: {
-        appointment_date: {
-          [Op.between]: [dayStart, dayEnd]
-        },
-        status: {
-          [Op.notIn]: ["cancelled"]
-        }
-      },
-      attributes: ["appointment_date"]
+        appointment_time: date
+      }
     });
 
-    const booked = appointments.map(a =>
-      new Date(a.appointment_date).getTime()
-    );
+    const bookedTimes = booked.map(a => a.appointment_time);
 
-    const slots = [];
-    const base = new Date(`${date}T00:00:00`);
+    const allSlots = [
+      "09:00",
+      "10:00",
+      "11:00",
+      "13:00",
+      "14:00",
+      "15:00",
+      "16:00"
+    ];
 
-    for (let h = startHour; h < endHour; h++) {
-      for (let m = 0; m < 60; m += slotMinutes) {
-        const slot = new Date(base);
-        slot.setHours(h, m, 0, 0);
-
-        const slotTime = slot.getTime();
-
-        const isBooked = booked.some(t => t === slotTime);
-
-        if (!isBooked) {
-          slots.push(slot.toISOString());
-        }
-      }
-    }
+    const available = allSlots.filter(slot => {
+      return !bookedTimes.some(t => t.includes(slot));
+    });
 
     res.json({
+      success: true,
       date,
-      slot_minutes: slotMinutes,
-      slots
+      slots: available
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Get available slots failed" });
+
+  } catch (error) {
+    console.error("Get slots error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

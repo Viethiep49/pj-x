@@ -1,99 +1,97 @@
-import Product from "../../models/Product.js";
+import Product from "../models/Product.js";
 
-/* GET /api/products */
+/**
+ * GET /api/products
+ */
 export const getProducts = async (req, res) => {
   try {
-    const { active, species, category_id } = req.query;
+    const { species, fur, size } = req.query;
 
-    const where = {};
+    const where = { is_active: true };
 
-    if (active !== undefined) {
-      where.is_active = active === "true";
-    }
-
-    if (species) {
-      where.target_species = species;
-    }
-
-    if (category_id) {
-      where.category_id = category_id;
-    }
+    if (species) where.target_species = species;
+    if (fur) where.target_fur_type = fur;
+    if (size) where.target_size = size;
 
     const products = await Product.findAll({
       where,
-      order: [["created_at", "DESC"]]
+      order: [["created_at", "DESC"]],
     });
 
-    res.json(products);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: "Get products failed" });
+    res.json({
+      success: true,
+      count: products.length,
+      data: products,
+    });
+
+  } catch (error) {
+    console.error("Get products error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-/* GET /api/products/:id */
+/**
+ * GET /api/products/:id
+ */
 export const getProductById = async (req, res) => {
   try {
+
     const product = await Product.findByPk(req.params.id);
 
-    if (!product)
-      return res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
 
-    res.json(product);
-  } catch (e) {
-    res.status(500).json({ message: "Get product failed" });
-  }
-};
-
-/* POST /api/products */
-export const createProduct = async (req, res) => {
-  try {
-    const product = await Product.create(req.body);
-    res.status(201).json(product);
-  } catch (e) {
-    console.error(e);
-    res.status(400).json({
-      message: "Create product failed",
-      error: e.message
+    res.json({
+      success: true,
+      data: product
     });
+
+  } catch (error) {
+    console.error("Get product error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-/* PUT /api/products/:id */
-export const updateProduct = async (req, res) => {
+/**
+ * POST /api/products/:id/reviews
+ */
+export const addProductReview = async (req, res) => {
   try {
+
+    const { rating } = req.body;
+
     const product = await Product.findByPk(req.params.id);
 
-    if (!product)
-      return res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    const newCount = product.rating_count + 1;
+
+    const newAvg =
+      (product.rating_avg * product.rating_count + rating) / newCount;
 
     await product.update({
-      ...req.body,
-      updated_at: new Date()
+      rating_avg: newAvg,
+      rating_count: newCount
     });
 
-    res.json(product);
-  } catch (e) {
-    console.error(e);
-    res.status(400).json({
-      message: "Update product failed",
-      error: e.message
+    res.json({
+      success: true,
+      message: "Review added",
+      rating_avg: newAvg,
+      rating_count: newCount
     });
-  }
-};
 
-/* DELETE /api/products/:id */
-export const deleteProduct = async (req, res) => {
-  try {
-    const product = await Product.findByPk(req.params.id);
-
-    if (!product)
-      return res.status(404).json({ message: "Product not found" });
-
-    await product.destroy();
-
-    res.json({ message: "Deleted successfully" });
-  } catch (e) {
-    res.status(500).json({ message: "Delete product failed" });
+  } catch (error) {
+    console.error("Review error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

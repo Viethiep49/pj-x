@@ -1,39 +1,75 @@
-import Vaccination from "../../models/Vaccination.js";
+import Vaccination from "../models/Vaccination.js";
+import VaccineType from "../models/VaccineType.js";
 
-/*
-GET /api/vaccinations
-*/
-export const getVaccinations = async (req, res) => {
+// GET /api/vaccinations/:petId
+export const getVaccinationsByPet = async (req, res) => {
   try {
-    const where = {};
+    const { petId } = req.params;
 
-    if (req.query.pet_id) where.pet_id = req.query.pet_id;
-    if (req.query.user_id) where.user_id = req.query.user_id;
-
-    const data = await Vaccination.findAll({
-      where,
-      order: [["vaccination_date", "DESC"]]
+    const vaccinations = await Vaccination.findAll({
+      where: { pet_id: petId },
+      include: [
+        {
+          model: VaccineType,
+          attributes: ["id", "name"],
+        },
+      ],
+      order: [["vaccination_date", "DESC"]],
     });
 
-    res.json(data);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Get vaccinations failed" });
+    res.json({
+      success: true,
+      count: vaccinations.length,
+      data: vaccinations,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
-
-/*
-POST /api/vaccinations
-*/
+/**
+* POST /api/vaccinations
+ * [Staff] Record vaccination
+ */
 export const createVaccination = async (req, res) => {
   try {
-    const vaccination = await Vaccination.create(req.body);
-    res.status(201).json(vaccination);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({
-      message: "Create vaccination failed",
-      error: err.message
+    const {
+      pet_id,
+      vaccine_type_id,
+      administered_by,
+      dose_number,
+      vaccination_date,
+      next_due_date,
+      batch_number,
+      notes,
+      status
+    } = req.body;
+
+    const vaccination = await Vaccination.create({
+      pet_id,
+      vaccine_type_id,
+      administered_by,
+      dose_number,
+      vaccination_date,
+      next_due_date,
+      batch_number,
+      notes,
+      status: status || "completed"
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Vaccination recorded successfully",
+      data: vaccination
+    });
+
+  } catch (error) {
+    console.error("Create vaccination error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
     });
   }
 };

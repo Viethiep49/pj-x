@@ -1,37 +1,17 @@
-import Order from "../../../models/Order.js";
+import pool from "../../config/db.js";
 
-export const confirmOrder = async (req, res) => {
+export const updateOrderStatus = async (req, res) => {
+
   const { id } = req.params;
+  const { status } = req.body;
 
-  const order = await Order.findByPk(id);
-  if (!order) return res.status(404).json({ message: "Order not found" });
+  const result = await pool.query(
+    `UPDATE orders
+     SET status=$1
+     WHERE id=$2
+     RETURNING *`,
+    [status, id]
+  );
 
-  order.status = "confirmed";
-  await order.save();
-
-  res.json(order);
-};
-
-export const completeOrder = async (req, res) => {
-  const { id } = req.params;
-
-  const order = await Order.findByPk(id);
-  if (!order) return res.status(404).json({ message: "Order not found" });
-
-  order.status = "completed";
-  await order.save();
-
-  res.json(order);
-};
-
-export const cancelOrder = async (req, res) => {
-  const { id } = req.params;
-
-  const order = await Order.findByPk(id);
-  if (!order) return res.status(404).json({ message: "Order not found" });
-
-  order.status = "cancelled";
-  await order.save();
-
-  res.json(order);
+  res.json(result.rows[0]);
 };

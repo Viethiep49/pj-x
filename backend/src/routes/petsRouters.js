@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  getAllPets,
+  getPets,
   createPet,
   updatePet,
   deletePet
@@ -8,7 +8,7 @@ import {
 
 const router = express.Router();
 
-router.get("/", getAllPets);
+router.get("/", getPets);
 router.post("/", createPet);
 router.put("/:id", updatePet);
 router.delete("/:id", deletePet);

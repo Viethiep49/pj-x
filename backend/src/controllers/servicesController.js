@@ -1,27 +1,36 @@
-import Service from "../../models/Service.js";
+import Service from "../models/Service.js";
 
-export const getServices = async (req, res) => {
+/**
+ * @desc    Get all active services
+ * @route   GET /api/services
+ * @access  Public
+ */
+export const getAllServices = async (req, res) => {
   try {
-    const { active, species } = req.query;
-
-    const where = {};
-
-    if (active !== undefined) {
-      where.is_active = active === "true";
-    }
-
-    if (species) {
-      where.target_species = species;
-    }
-
     const services = await Service.findAll({
-      where,
-      order: [["created_at", "DESC"]]
+      where: { is_active: true },
+      order: [["created_at", "DESC"]],
+      attributes: [
+        "id",
+        "name",
+        "description",
+        "price",
+        "duration_minutes",
+        "target_species",
+        "image_url"
+      ]
     });
 
-    res.json(services);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Cannot get services" });
+    res.status(200).json({
+      success: true,
+      count: services.length,
+      data: services
+    });
+  } catch (error) {
+    console.error("Get services error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 };

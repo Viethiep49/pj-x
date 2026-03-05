@@ -1,12 +1,12 @@
 import express from "express";
 import {
-  getVaccinations,
-  createVaccination
+  createVaccination,
+  getVaccinationsByPet,
 } from "../controllers/vaccinationsController.js";
 
 const router = express.Router();
 
-router.get("/", getVaccinations);
 router.post("/", createVaccination);
+router.get("/:petId", getVaccinationsByPet);
 
 export default router;
