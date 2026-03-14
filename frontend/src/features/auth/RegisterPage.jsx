@@ -14,7 +14,7 @@ const RegisterPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
-    const { register } = useAuth();
+    const { register, googleLogin } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -33,7 +33,12 @@ const RegisterPage = () => {
 
     const handleGoogleLogin = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
-            alert("Google Signup Success! Integration pending credentials.");
+            try {
+                const user = await googleLogin(tokenResponse.access_token);
+                navigate(user.role === 'admin' || user.role === 'staff' ? '/admin' : '/', { replace: true });
+            } catch (err) {
+                setError(err.response?.data?.message || 'Google signup failed.');
+            }
         },
         onError: () => setError('Google Signup Failed')
     });

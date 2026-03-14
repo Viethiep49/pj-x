@@ -26,6 +26,21 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const googleLogin = async (accessToken) => {
+        setLoading(true);
+        try {
+            const res = await api.post('/auth/google-login', { access_token: accessToken });
+            const { token: newToken, user: newUser } = res.data;
+            localStorage.setItem('token', newToken);
+            localStorage.setItem('user', JSON.stringify(newUser));
+            setToken(newToken);
+            setUser(newUser);
+            return newUser;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const register = async (formData) => {
         setLoading(true);
         try {
@@ -53,7 +68,7 @@ export const AuthProvider = ({ children }) => {
     const isStaff = user?.role === 'staff' || user?.role === 'admin';
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, isAuthenticated, isAdmin, isStaff, login, register, logout }}>
+        <AuthContext.Provider value={{ user, token, loading, isAuthenticated, isAdmin, isStaff, login, googleLogin, register, logout }}>
             {children}
         </AuthContext.Provider>
     );

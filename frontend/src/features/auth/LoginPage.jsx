@@ -15,7 +15,7 @@ const LoginPage = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
-    const { login } = useAuth();
+    const { login, googleLogin } = useAuth();
 
     const from = location.state?.from?.pathname || '/';
 
@@ -37,11 +37,10 @@ const LoginPage = () => {
     const handleGoogleLogin = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
             try {
-                // Send access token to backend
-                // await socialLogin(tokenResponse.access_token, 'google');
-                alert("Google Login Success! Integration pending credentials.");
+                const user = await googleLogin(tokenResponse.access_token);
+                navigate(user.role === 'admin' || user.role === 'staff' ? '/admin' : from, { replace: true });
             } catch (err) {
-                setError('Google setup incomplete.');
+                setError(err.response?.data?.message || 'Google login failed.');
             }
         },
         onError: () => setError('Google Login Failed')

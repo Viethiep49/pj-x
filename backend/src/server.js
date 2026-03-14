@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import sequelize from "./config/db.js";
 
 // Import models (quan trọng để Sequelize load bảng)
@@ -29,6 +30,7 @@ const app = express();
    Middleware
 ========================= */
 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
