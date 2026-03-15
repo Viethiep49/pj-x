@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Scan, PawPrint, X, RefreshCw, Sparkles, AlertCircle, Loader, ShoppingBag, CalendarDays } from 'lucide-react';
 import * as tf from '@tensorflow/tfjs';
 import { useNavigate } from 'react-router-dom';
+import api from '../../services/api';
 
 // --- API Configuration ---
 const API_URL = 'http://localhost:8000'; // Ensure this matches your backend
@@ -131,6 +132,18 @@ const PetScannerPage = () => {
             });
 
             setResult({ breed, confidence: `${confidence}%` });
+
+            // Save scan result to history
+            try {
+                await api.post('/ai/scan-results', {
+                    image_url: preview, // Mock URL for now, in real apps you'd upload first
+                    predicted_breed: breed,
+                    confidence_score: parseFloat(confidence)
+                });
+                console.log("Scan result saved to history");
+            } catch (err) {
+                console.warn("Failed to save scan result:", err);
+            }
 
         } catch (err) {
             console.error("Scan error:", err);
@@ -331,7 +344,7 @@ const PetScannerPage = () => {
                                         <button onClick={() => navigate('/booking')} className="px-6 py-2.5 bg-slate-800 text-white rounded-xl font-medium hover:bg-slate-700 transition-colors shadow-lg hover:shadow-slate-800/20 flex items-center justify-center gap-2">
                                             <CalendarDays className="w-4 h-4" /> Đặt lịch Spa
                                         </button>
-                                        <button onClick={() => navigate('/shop')} className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-emerald-600/20 flex items-center justify-center gap-2">
+                                        <button onClick={() => navigate(`/shop?breed=${encodeURIComponent(result.breed)}`)} className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors shadow-lg hover:shadow-emerald-600/20 flex items-center justify-center gap-2">
                                             <ShoppingBag className="w-4 h-4" /> Xem gợi ý mua sắm
                                         </button>
                                     </div>

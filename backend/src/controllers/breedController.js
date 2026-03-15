@@ -62,6 +62,55 @@ export const getBreedRecommendations = async (req, res, next) => {
     }
 };
 
+export const getSmartRecommendations = async (req, res, next) => {
+    try {
+        const { breedName } = req.query;
+        if (!breedName) {
+            return res.status(400).json({ success: false, message: 'breedName query parameter is required' });
+        }
+
+        const breed = await Breed.findOne({ where: { name: breedName } });
+        if (!breed) {
+            return res.json({ 
+                success: true, 
+                data: { breed: null, products: [], services: [], message: 'Breed not found' } 
+            });
+        }
+
+        const recommendations = await BreedRecommendation.findAll({
+            where: { breed_id: breed.id },
+            include: [
+                { model: Product, as: 'product', required: false },
+                { model: Service, as: 'service', required: false },
+            ],
+            order: [['priority', 'ASC']],
+        });
+
+        const products = recommendations
+            .filter(r => r.product)
+            .map(r => ({
+                ...r.product.toJSON(),
+                recommendation_type: r.recommendation_type,
+                recommendation_reason: r.recommendation_reason,
+            }));
+
+        const services = recommendations
+            .filter(r => r.service)
+            .map(r => ({
+                ...r.service.toJSON(),
+                recommendation_type: r.recommendation_type,
+                recommendation_reason: r.recommendation_reason,
+            }));
+
+        res.json({
+            success: true,
+            data: { breed, products, services },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const createBreed = async (req, res, next) => {
     try {
         const breed = await Breed.create(req.body);

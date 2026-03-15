@@ -297,7 +297,7 @@ const LandingPage = () => {
                   className="text-xl px-10 py-6 group flex items-center gap-3"
                 >
                   <Scan className="w-6 h-6" />
-                  AI Pet Scanner
+                  Tìm sản phẩm qua ảnh
                 </Button>
               </Link>
             </motion.div>

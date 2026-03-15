@@ -15,6 +15,31 @@ const BreedRecommendation = sequelize.define(
       allowNull: false,
     },
 
+    product_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+
+    service_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+
+    recommendation_type: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+
+    recommendation_reason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+
+    priority: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+
     pet_size: {
       type: DataTypes.STRING,
       allowNull: true,
