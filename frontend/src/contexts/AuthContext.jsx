@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
 
 const AuthContext = createContext(null);
@@ -26,10 +26,10 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const register = async (formData) => {
+    const googleLogin = async (accessToken) => {
         setLoading(true);
         try {
-            const res = await api.post('/auth/register', formData);
+            const res = await api.post('/auth/google-login', { access_token: accessToken });
             const { token: newToken, user: newUser } = res.data;
             localStorage.setItem('token', newToken);
             localStorage.setItem('user', JSON.stringify(newUser));
@@ -41,10 +41,25 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const socialLogin = async (provider, accessToken) => {
+    const githubLogin = async (code) => {
         setLoading(true);
         try {
-            const res = await api.post(`/auth/${provider}`, { access_token: accessToken });
+            const res = await api.post('/auth/github-login', { code });
+            const { token: newToken, user: newUser } = res.data;
+            localStorage.setItem('token', newToken);
+            localStorage.setItem('user', JSON.stringify(newUser));
+            setToken(newToken);
+            setUser(newUser);
+            return newUser;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const register = async (formData) => {
+        setLoading(true);
+        try {
+            const res = await api.post('/auth/register', formData);
             const { token: newToken, user: newUser } = res.data;
             localStorage.setItem('token', newToken);
             localStorage.setItem('user', JSON.stringify(newUser));
@@ -68,7 +83,7 @@ export const AuthProvider = ({ children }) => {
     const isStaff = user?.role === 'staff' || user?.role === 'admin';
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, isAuthenticated, isAdmin, isStaff, login, register, socialLogin, logout }}>
+        <AuthContext.Provider value={{ user, token, loading, isAuthenticated, isAdmin, isStaff, login, googleLogin, githubLogin, register, logout }}>
             {children}
         </AuthContext.Provider>
     );
