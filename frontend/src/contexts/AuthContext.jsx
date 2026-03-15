@@ -26,40 +26,25 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const googleLogin = async (accessToken) => {
-        setLoading(true);
-        try {
-            const res = await api.post('/auth/google-login', { access_token: accessToken });
-            const { token: newToken, user: newUser } = res.data;
-            localStorage.setItem('token', newToken);
-            localStorage.setItem('user', JSON.stringify(newUser));
-            setToken(newToken);
-            setUser(newUser);
-            return newUser;
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const githubLogin = async (code) => {
-        setLoading(true);
-        try {
-            const res = await api.post('/auth/github-login', { code });
-            const { token: newToken, user: newUser } = res.data;
-            localStorage.setItem('token', newToken);
-            localStorage.setItem('user', JSON.stringify(newUser));
-            setToken(newToken);
-            setUser(newUser);
-            return newUser;
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const register = async (formData) => {
         setLoading(true);
         try {
             const res = await api.post('/auth/register', formData);
+            const { token: newToken, user: newUser } = res.data;
+            localStorage.setItem('token', newToken);
+            localStorage.setItem('user', JSON.stringify(newUser));
+            setToken(newToken);
+            setUser(newUser);
+            return newUser;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const socialLogin = async (provider, accessToken) => {
+        setLoading(true);
+        try {
+            const res = await api.post(`/auth/${provider}`, { access_token: accessToken });
             const { token: newToken, user: newUser } = res.data;
             localStorage.setItem('token', newToken);
             localStorage.setItem('user', JSON.stringify(newUser));
@@ -83,7 +68,7 @@ export const AuthProvider = ({ children }) => {
     const isStaff = user?.role === 'staff' || user?.role === 'admin';
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, isAuthenticated, isAdmin, isStaff, login, googleLogin, githubLogin, register, logout }}>
+        <AuthContext.Provider value={{ user, token, loading, isAuthenticated, isAdmin, isStaff, login, register, socialLogin, logout }}>
             {children}
         </AuthContext.Provider>
     );
