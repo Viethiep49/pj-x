@@ -41,6 +41,21 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const githubLogin = async (code) => {
+        setLoading(true);
+        try {
+            const res = await api.post('/auth/github-login', { code });
+            const { token: newToken, user: newUser } = res.data;
+            localStorage.setItem('token', newToken);
+            localStorage.setItem('user', JSON.stringify(newUser));
+            setToken(newToken);
+            setUser(newUser);
+            return newUser;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const register = async (formData) => {
         setLoading(true);
         try {
@@ -68,7 +83,7 @@ export const AuthProvider = ({ children }) => {
     const isStaff = user?.role === 'staff' || user?.role === 'admin';
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, isAuthenticated, isAdmin, isStaff, login, googleLogin, register, logout }}>
+        <AuthContext.Provider value={{ user, token, loading, isAuthenticated, isAdmin, isStaff, login, googleLogin, githubLogin, register, logout }}>
             {children}
         </AuthContext.Provider>
     );

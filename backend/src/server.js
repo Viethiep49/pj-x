@@ -15,6 +15,7 @@ import appointmentsRouters from "./routes/appointmentsRouters.js";
 import vaccinationsRouters from "./routes/vaccinationsRouters.js";
 import vaccineTypeRoutes from "./routes/vaccineTypeRoutes.js";
 import authRoutes from "./routes/auth/auth.routes.js";
+import { githubCallback } from "./controllers/authController.js";
 import paymentRoutes from "./routes/payment/payment.routes.js";
 import breedsRoutes from "./routes/breedsRoutes.js";
 import productAdminRoutes from "./routes/admin/productsAdminRoutes.js";
@@ -46,6 +47,7 @@ app.use("/api/appointments", appointmentsRouters);
 app.use("/api/vaccinations", vaccinationsRouters);
 app.use("/api/vaccine-types", vaccineTypeRoutes);
 app.use("/api/auth", authRoutes);
+app.get("/auth/github/callback", githubCallback);  // GitHub OAuth callback (no /api prefix)
 app.use("/api/payment", paymentRoutes);
 app.use("/api/breeds", breedsRoutes);
 
