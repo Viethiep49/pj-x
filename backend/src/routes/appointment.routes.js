@@ -3,7 +3,7 @@ import { body } from 'express-validator';
 import {
     getMyAppointments, createAppointment,
     getAvailableSlots, getAllAppointments, updateAppointmentStatus,
-} from '../controllers/appointmentController.js';
+} from '../controllers/appointment.controller.js';
 import { protect } from '../middlewares/auth.js';
 import { authorize } from '../middlewares/rbac.js';
 import { validate } from '../middlewares/validate.js';

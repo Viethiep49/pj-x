@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { getVaccineTypes, getPetVaccinations, createVaccination } from '../controllers/vaccinationController.js';
+import { getVaccineTypes, getPetVaccinations, createVaccination } from '../controllers/vaccination.controller.js';
 import { protect } from '../middlewares/auth.js';
 import { authorize } from '../middlewares/rbac.js';
 import { validate } from '../middlewares/validate.js';

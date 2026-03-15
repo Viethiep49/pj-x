@@ -1,7 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { register, login, getMe } from '../../controllers/authController.js';
-import { googleAuth } from '../../controllers/authController.js';
+import { register, login, getMe, googleAuth } from '../../controllers/auth/auth.controller.js';
 import { protect } from '../../middlewares/auth.js';
 import { validate } from '../../middlewares/validate.js';
 import { authLimiter } from '../../middlewares/rateLimiter.js';

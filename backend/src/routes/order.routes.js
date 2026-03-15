@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { getMyOrders, createOrder, getAllOrders, updateOrderStatus } from '../controllers/orderController.js';
+import { getMyOrders, createOrder, getAllOrders, updateOrderStatus } from '../controllers/order.controller.js';
 import { protect } from '../middlewares/auth.js';
 import { authorize } from '../middlewares/rbac.js';
 import { validate } from '../middlewares/validate.js';
