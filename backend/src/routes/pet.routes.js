@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { getMyPets, createPet, updatePet, deletePet } from '../controllers/pet.controller.js';
+import { getMyPets, createPet, updatePet, deletePet } from '../controllers/petController.js';
 import { protect } from '../middlewares/auth.js';
 import { validate } from '../middlewares/validate.js';
 

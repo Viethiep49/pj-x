@@ -2,7 +2,7 @@ import express from 'express';
 import {
     getAllBreeds, getBreedById, getBreedRecommendations,
     createBreed, updateBreed, deleteBreed
-} from '../controllers/breed.controller.js';
+} from '../controllers/breedController.js';
 import { protect } from '../middlewares/auth.js';
 import { authorize } from '../middlewares/rbac.js';
 

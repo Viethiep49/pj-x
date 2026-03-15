@@ -2,7 +2,7 @@ import express from 'express';
 import { body } from 'express-validator';
 import {
     getAllUsers, createUser, updateUser, deleteUser
-} from '../controllers/user.controller.js';
+} from '../controllers/userController.js';
 import { protect } from '../middlewares/auth.js';
 import { authorize } from '../middlewares/rbac.js';
 import { validate } from '../middlewares/validate.js';

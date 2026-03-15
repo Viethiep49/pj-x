@@ -3,7 +3,7 @@ import { body } from 'express-validator';
 import {
     getAllProducts, getProductById,
     createProduct, updateProduct, deleteProduct, addReview,
-} from '../controllers/product.controller.js';
+} from '../controllers/productController.js';
 import { protect } from '../middlewares/auth.js';
 import { authorize } from '../middlewares/rbac.js';
 import { validate } from '../middlewares/validate.js';
