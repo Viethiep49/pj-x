@@ -48,12 +48,12 @@ class ChatRequest(BaseModel):
     message: str
 
 class ScanResultRequest(BaseModel):
-    user_id: Optional[str] = None # UUID string, optional for guests
-    pet_id: Optional[str] = None # UUID string, optional
+    user_id: Optional[str] = None
+    pet_id: Optional[str] = None
     breed: str
     confidence: float
     image_url: str
-    top_3_predictions: List[Dict[str, Any]] # [{"breed": "Beagle", "confidence": 0.95}, ...]
+    top_3_predictions: List[Dict[str, Any]]
 
 # --- Endpoints ---
 
@@ -68,25 +68,18 @@ async def chat(request: ChatRequest):
 
 @app.post("/api/ai/scan-results")
 async def save_scan_result(request: ScanResultRequest):
-    """
-    Save the scan result to the database.
-    Expects breed name to match the 'name' column in 'breeds' table to resolve UUID.
-    """
     conn = None
     try:
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        # 1. Resolve breed_id from breed name
         cur.execute("SELECT id FROM breeds WHERE name = %s OR display_name = %s", (request.breed, request.breed))
         breed_record = cur.fetchone()
-        
         breed_id = breed_record['id'] if breed_record else None
 
         if not breed_id:
-             print(f"Warning: Breed '{request.breed}' not found in DB. Saving with NULL breed_id.")
+            print(f"Warning: Breed '{request.breed}' not found in DB. Saving with NULL breed_id.")
 
-        # 2. Insert into scan_results
         insert_query = """
             INSERT INTO scan_results (user_id, pet_id, breed_id, confidence, image_url, top_3_predictions)
             VALUES (%s, %s, %s, %s, %s, %s)
@@ -100,10 +93,10 @@ async def save_scan_result(request: ScanResultRequest):
             request.image_url,
             json.dumps(request.top_3_predictions)
         ))
-        
+
         new_scan = cur.fetchone()
         conn.commit()
-        
+
         return {
             "success": True,
             "message": "Scan result saved successfully",
@@ -121,6 +114,140 @@ async def save_scan_result(request: ScanResultRequest):
     finally:
         if conn:
             conn.close()
+
+
+@app.get("/api/ai/recommendations/{breed_id}")
+async def get_recommendations(breed_id: str):
+    """Get product & service recommendations for a specific breed."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("SELECT * FROM breeds WHERE id = %s", (breed_id,))
+        breed = cur.fetchone()
+        if not breed:
+            raise HTTPException(status_code=404, detail="Breed not found")
+
+        cur.execute("""
+            SELECT br.recommendation_type, br.recommendation_reason, br.priority,
+                   p.id as product_id, p.name as product_name, p.price,
+                   p.sale_price, p.image_url, p.slug,
+                   s.id as service_id, s.name as service_name, s.price as service_price
+            FROM breed_recommendations br
+            LEFT JOIN products p ON br.product_id = p.id AND p.is_active = true
+            LEFT JOIN services s ON br.service_id = s.id AND s.is_active = true
+            WHERE br.breed_id = %s
+            ORDER BY br.priority DESC, br.recommendation_type
+        """, (breed_id,))
+        recommendations = cur.fetchall()
+
+        # Fallback: suggest by species/fur_type if no specific recommendations
+        if not recommendations:
+            cur.execute("""
+                SELECT id, name, price, sale_price, image_url, slug,
+                       target_species, target_fur_type, target_size
+                FROM products
+                WHERE is_active = true
+                  AND (target_species = %s OR target_species = 'both')
+                  AND (target_fur_type = %s OR target_fur_type = 'all')
+                ORDER BY rating_avg DESC
+                LIMIT 8
+            """, (breed['species'], breed['fur_type']))
+            fallback_products = cur.fetchall()
+            return {
+                "success": True,
+                "breed": dict(breed),
+                "recommendations": [],
+                "suggested_products": [dict(p) for p in fallback_products],
+                "note": "Generic suggestions based on breed characteristics"
+            }
+
+        return {
+            "success": True,
+            "breed": dict(breed),
+            "recommendations": [dict(r) for r in recommendations]
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.get("/api/ai/analytics")
+async def get_analytics():
+    """Admin analytics dashboard: scan stats, appointments, orders."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("""
+            SELECT COUNT(*) as total_scans,
+                   COUNT(DISTINCT user_id) as unique_users,
+                   AVG(confidence) as avg_confidence
+            FROM scan_results
+        """)
+        scan_stats = cur.fetchone()
+
+        cur.execute("""
+            SELECT b.display_name, b.species, COUNT(sr.id) as scan_count
+            FROM scan_results sr
+            JOIN breeds b ON sr.breed_id = b.id
+            GROUP BY b.id, b.display_name, b.species
+            ORDER BY scan_count DESC
+            LIMIT 5
+        """)
+        top_breeds = cur.fetchall()
+
+        cur.execute("""
+            SELECT DATE(created_at) as date, COUNT(*) as count
+            FROM scan_results
+            WHERE created_at >= NOW() - INTERVAL '7 days'
+            GROUP BY DATE(created_at)
+            ORDER BY date DESC
+        """)
+        recent_scans = cur.fetchall()
+
+        cur.execute("SELECT status, COUNT(*) as count FROM appointments GROUP BY status")
+        appointment_stats = cur.fetchall()
+
+        cur.execute("""
+            SELECT status, COUNT(*) as count, SUM(total_amount) as revenue
+            FROM orders GROUP BY status
+        """)
+        order_stats = cur.fetchall()
+
+        return {
+            "success": True,
+            "data": {
+                "scans": {
+                    "total": int(scan_stats['total_scans'] or 0),
+                    "unique_users": int(scan_stats['unique_users'] or 0),
+                    "avg_confidence": float(scan_stats['avg_confidence'] or 0),
+                    "top_breeds": [dict(b) for b in top_breeds],
+                    "daily_trend": [dict(r) for r in recent_scans],
+                },
+                "appointments": {s['status']: int(s['count']) for s in appointment_stats},
+                "orders": {
+                    s['status']: {
+                        "count": int(s['count']),
+                        "revenue": float(s['revenue'] or 0)
+                    } for s in order_stats
+                },
+            }
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        if conn:
+            conn.close()
+
 
 if __name__ == "__main__":
     import uvicorn

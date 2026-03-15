@@ -1,0 +1,15 @@
+
+PetScannerPage.jsx
+: Sau khi scan xong → gọi /api/ai/scan-results lưu DB, rồi điều hướng sang /shop?breed=Pomeranian
+ShopPage.jsx: Đọc query param ?breed=... → gọi /api/ai/recommendations/{breed_id} → hiển thị sản phẩm gợi ý theo giống ưu tiên lên đầu
+
+Scan xong → breed = "Pomeranian"
+      ↓
+1. POST /api/ai/scan-results  (lưu lịch sử)
+      ↓
+2. GET /api/ai/recommendations/{breed_id}
+      ↓
+3. Hiển thị sản phẩm được lọc riêng cho Pomeranian
+   (dầu gội lông dài, lược FURminator, áo hoodie nhỏ...)
+   
+onClick={() => navigate('/shop')}   // Chỉ đi thẳng /shop, không kèm breed nào!
