@@ -1,92 +1,80 @@
-import express from "express";
-import dotenv from "dotenv";
-import cors from "cors";
-import sequelize from "./config/db.js";
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import dotenv from 'dotenv';
 
-// Import models (quan trọng để Sequelize load bảng)
-import "../src/models/index.js";
+import sequelize from './config/db.js';
+import errorHandler from './middlewares/errorHandler.js';
+import { apiLimiter } from './middlewares/rateLimiter.js';
 
-// Routes
-import petRoutes from "./routes/petsRouters.js";
-import servicesRouters from "./routes/servicesRouters.js";
-import productsRouters from "./routes/productsRouters.js";
-import ordersRouters from "./routes/ordersRouters.js";
-import appointmentsRouters from "./routes/appointmentsRouters.js";
-import vaccinationsRouters from "./routes/vaccinationsRouters.js";
-import vaccineTypeRoutes from "./routes/vaccineTypeRoutes.js";
-import authRoutes from "./routes/auth/auth.routes.js";
-import { githubCallback } from "./controllers/authController.js";
-import paymentRoutes from "./routes/payment/payment.routes.js";
-import breedsRoutes from "./routes/breedsRoutes.js";
-import productAdminRoutes from "./routes/admin/productsAdminRoutes.js";
-import ordersAdminRoutes from "./routes/admin/ordersAdminRoutes.js";
-import appointmentsAdminRoutes from "./routes/admin/appointmentsAdminRoutes.js";
-
+// Route imports
+import authRoutes from './routes/auth/auth.routes.js';
+import breedRoutes from './routes/breed.routes.js';
+import userRoutes from './routes/user.routes.js';
+import petRoutes from './routes/pet.routes.js';
+import serviceRoutes from './routes/service.routes.js';
+import productRoutes from './routes/product.routes.js';
+import orderRoutes from './routes/order.routes.js';
+import appointmentRoutes from './routes/appointment.routes.js';
+import vaccinationRoutes from './routes/vaccination.routes.js';
 
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5001;
 
-/* =========================
-   Middleware
-========================= */
+// ─── Security ────────────────────────────────────────
+app.use(helmet());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true,
+}));
 
-app.use(cors());
+// ─── Body Parsing ────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* =========================
-   API Routes
-========================= */
+// ─── Rate Limiting ───────────────────────────────────
+app.use('/api', apiLimiter);
 
-app.use("/api/pets", petRoutes);
-app.use("/api/services", servicesRouters);
-app.use("/api/products", productsRouters);
-app.use("/api/orders", ordersRouters);
-app.use("/api/appointments", appointmentsRouters);
-app.use("/api/vaccinations", vaccinationsRouters);
-app.use("/api/vaccine-types", vaccineTypeRoutes);
-app.use("/api/auth", authRoutes);
-app.get("/auth/github/callback", githubCallback);  // GitHub OAuth callback (no /api prefix)
-app.use("/api/payment", paymentRoutes);
-app.use("/api/breeds", breedsRoutes);
+// ─── Routes ──────────────────────────────────────────
+app.use('/api/auth', authRoutes);
+app.use('/api/breeds', breedRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/pets', petRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/vaccinations', vaccinationRoutes);
 
-app.use("/api/admin/products", productAdminRoutes);
-app.use("/api/admin/orders", ordersAdminRoutes);
-app.use("/api/admin/appointments", appointmentsAdminRoutes);
-/* =========================
-   Health Check API
-========================= */
-
-app.get("/", (req, res) => {
-  res.json({
-    message: "Pawsitive Pet Spa API running",
-    status: "OK",
-  });
+// ─── Health Check ────────────────────────────────────
+app.get('/health', (req, res) => {
+  res.json({ success: true, message: 'Pawsitive API is running 🐾', port: PORT });
 });
 
-/* =========================
-   Start Server
-========================= */
+// ─── 404 ─────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
+});
 
-const PORT = process.env.PORT || 5000;
+// ─── Error Handler ───────────────────────────────────
+app.use(errorHandler);
 
+// ─── Start Server ─────────────────────────────────────
 const startServer = async () => {
   try {
-    // Test DB connection
     await sequelize.authenticate();
-    console.log("PostgreSQL connected successfully");
-
-    await sequelize.authenticate();
-
-    console.log("Database synchronized");
-
-    // Start express
+    console.log('✅ Database connected successfully');
     app.listen(PORT, () => {
-      console.log(`Server running at: http://localhost:${PORT}`);
+      console.log(`🚀 Pawsitive API running on http://localhost:${PORT}`);
     });
-  } catch (error) {
-    console.error("Database connection error:", error);
+  } catch (err) {
+    console.error('❌ Database connection failed:', err.message);
+    console.log('⚠️  Server starting without database — connect PostgreSQL to enable full functionality');
+    app.listen(PORT, () => {
+      console.log(`🚀 Pawsitive API running on http://localhost:${PORT} (no DB)`);
+    });
   }
 };
 
