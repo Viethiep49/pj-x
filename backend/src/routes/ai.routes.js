@@ -1,6 +1,6 @@
 import express from 'express';
-import { getMockAIResponse } from '../../utils/mockAiEngine.js';
-import { protect } from '../../middlewares/auth.js';
+import { getMockAIResponse } from '../utils/mockAiEngine.js';
+import { protect } from '../middlewares/auth.js';
 
 const router = express.Router();
 
