@@ -17,6 +17,7 @@ import productRoutes from './routes/product.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import appointmentRoutes from './routes/appointment.routes.js';
 import vaccinationRoutes from './routes/vaccination.routes.js';
+import aiRoutes from './routes/ai.routes.js';
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/vaccinations', vaccinationRoutes);
+app.use('/api/ai', aiRoutes);
 
 // ─── Health Check ────────────────────────────────────
 app.get('/health', (req, res) => {
