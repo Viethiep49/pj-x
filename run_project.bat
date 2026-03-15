@@ -31,7 +31,7 @@ cd ..
 echo.
 echo All systems go!
 echo AI Core: http://localhost:8000
-echo Backend: http://localhost:5000
+echo Backend: http://localhost:5001
 echo Frontend: http://localhost:5173
 echo.
 echo Close the opened windows to stop services.
