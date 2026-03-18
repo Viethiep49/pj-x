@@ -1,4 +1,4 @@
-import { sequelize, Order, OrderItem, Product, User } from '../../models/index.js';
+import { sequelize, Order, OrderItem, Product, User, Payment } from '../../models/index.js';
 
 const generateOrderNumber = () =>
     `ORD${Date.now().toString().slice(-8)}`;
@@ -10,6 +10,8 @@ export const getMyOrders = async (req, res, next) => {
             include: [{
                 model: OrderItem, as: 'items',
                 include: [{ model: Product, as: 'product', attributes: ['name', 'image_url', 'price'] }],
+            }, {
+                model: Payment, as: 'payments'
             }],
             order: [['created_at', 'DESC']],
         });
@@ -20,9 +22,9 @@ export const getMyOrders = async (req, res, next) => {
 };
 
 export const createOrder = async (req, res, next) => {
-    const t = await sequelize.sequelize.transaction();
+    const t = await sequelize.transaction();
     try {
-        const { items, delivery_method, shipping_address, receiver_name, receiver_phone, notes } = req.body;
+        const { items, delivery_method, shipping_address, receiver_name, receiver_phone, notes, payment_method } = req.body;
 
         let total_amount = 0;
         const itemsWithPrice = [];
@@ -40,23 +42,37 @@ export const createOrder = async (req, res, next) => {
         }
 
         const shipping_fee = delivery_method === 'shipping' ? 30000 : 0;
+        const final_total = total_amount + shipping_fee;
 
         const order = await Order.create({
             user_id: req.user.id,
             order_number: generateOrderNumber(),
-            total_amount: total_amount + shipping_fee,
+            total_amount: final_total,
             delivery_method,
             shipping_address,
             shipping_fee,
             receiver_name,
             receiver_phone,
             notes,
+            status: payment_method ? 'confirmed' : 'pending',
         }, { transaction: t });
 
         await OrderItem.bulkCreate(
             itemsWithPrice.map(i => ({ ...i, order_id: order.id })),
             { transaction: t }
         );
+
+        if (payment_method) {
+            await Payment.create({
+                user_id: req.user.id,
+                order_id: order.id,
+                payment_type: 'order',
+                amount: final_total,
+                payment_method,
+                status: 'completed',
+                transaction_id: `TXN${Date.now()}`,
+            }, { transaction: t });
+        }
 
         await t.commit();
         res.status(201).json({ success: true, data: order });

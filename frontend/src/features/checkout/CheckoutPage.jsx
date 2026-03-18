@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useCart } from "../../contexts/CartContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { CreditCard, CheckCircle2, ChevronLeft, MapPin } from "lucide-react";
+import { CreditCard, CheckCircle2, ChevronLeft, MapPin, X } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import Button from "../../components/ui/Button";
 import api from "../../services/api";
 
@@ -13,13 +14,14 @@ export default function CheckoutPage() {
 
     // Redirection if cart is empty
     useEffect(() => {
-        if (cartItems.length === 0) {
+        if (cartItems.length === 0 && !success) {
             navigate("/shop");
         }
     }, [cartItems, navigate]);
 
     const [paymentMethod, setPaymentMethod] = useState("card");
     const [loading, setLoading] = useState(false);
+    const [showMoMoModal, setShowMoMoModal] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
 
@@ -41,8 +43,12 @@ export default function CheckoutPage() {
     const SHIPPING_FEE = 30000; // 30k VND fixed testing fee
     const FINAL_TOTAL = cartTotal + SHIPPING_FEE;
 
+    // Mock MoMo QR Data (format: momo://pay?phone=...&amount=...&note=...)
+    // This is a simplified format for demo purposes
+    const momoLink = `2|99|0987654321|Pawsitive Pet Spa|admin@pawsitive.com|0|0|${FINAL_TOTAL}|Demo Order ${Date.now().toString().slice(-4)}`;
+
     const handlePlaceOrder = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         setError("");
 
         // Validate shipping
@@ -59,13 +65,16 @@ export default function CheckoutPage() {
             }
         }
 
+        // If MoMo, show the modal first
+        if (paymentMethod === "momo" && !showMoMoModal) {
+            setShowMoMoModal(true);
+            return;
+        }
+
         setLoading(true);
 
         try {
-            // Simulate Payment Gateway Processing Time (2 seconds)
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            // Format payload matching backend orderController
+            // 1. Create Order first
             const orderPayload = {
                 items: cartItems.map(item => ({ product_id: item.id, quantity: item.quantity })),
                 delivery_method: "shipping",
@@ -73,26 +82,42 @@ export default function CheckoutPage() {
                 receiver_name: shippingDetails.name,
                 receiver_phone: shippingDetails.phone,
                 notes: shippingDetails.notes,
+                payment_method: paymentMethod,
             };
 
-            await api.post('/orders', orderPayload);
+            const orderRes = await api.post('/orders', orderPayload);
+            const orderData = orderRes.data.data;
 
-            // Success Flow
+            if (paymentMethod === 'momo') {
+                // 2. Request MoMo Payment URL
+                const momoRes = await api.post('/payments/momo', {
+                    orderId: orderData.id,
+                    amount: FINAL_TOTAL
+                });
+                
+                if (momoRes.data.payUrl) {
+                    window.location.href = momoRes.data.payUrl; // Redirect to MoMo
+                    return;
+                }
+            }
+
+            // Success Flow for other methods
             setSuccess(true);
             setTimeout(() => {
                 clearCart();
-                navigate("/my-pets"); // Or any order tracking page
+                navigate("/my-pets"); 
             }, 3000);
 
         } catch (err) {
             setError(err.response?.data?.message || "Failed to process payment. Please try again.");
             setLoading(false);
+            setShowMoMoModal(false);
         }
     };
 
     if (success) {
         return (
-            <div className="min-h-screen bg-peach/30 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-peach/30 flex items-center justify-center p-4 font-nunito">
                 <div className="bg-white p-12 rounded-3xl shadow-xl text-center max-w-lg w-full animate-squish">
                     <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle2 className="w-12 h-12 text-green-500" />
@@ -102,7 +127,7 @@ export default function CheckoutPage() {
                         Your order has been placed and is being processed. Thank you for shopping at Pawsitive Pet Spa.
                     </p>
                     <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <p className="text-sm text-gray-400 mt-4">Redirecting...</p>
+                    <p className="text-sm text-gray-400 mt-4">Redirecting to your pets...</p>
                 </div>
             </div>
         );
@@ -202,7 +227,7 @@ export default function CheckoutPage() {
                                         </div>
                                     </div>
 
-                                    {/* Card Form Dropdown */}
+                                    {/* Card Form */}
                                     {paymentMethod === 'card' && (
                                         <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-4">
                                             <div className="relative">
@@ -280,19 +305,11 @@ export default function CheckoutPage() {
                                         </div>
                                     </div>
                                     {paymentMethod === 'momo' && (
-                                        <div className="mt-6 flex flex-col items-center animate-in fade-in slide-in-from-top-4 p-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                            <div className="w-40 h-40 bg-white border border-gray-200 shadow-sm p-2 flex items-center justify-center relative">
-                                                {/* Fake QR code using CSS grid */}
-                                                <div className="w-full h-full grid grid-cols-4 grid-rows-4 gap-1 p-2 opacity-50">
-                                                    {Array.from({ length: 16 }).map((_, i) => (
-                                                        <div key={i} className={`bg-gray-800 ${Math.random() > 0.5 ? 'rounded-tl' : 'rounded-br'} ${Math.random() > 0.7 ? 'invisible' : ''}`}></div>
-                                                    ))}
-                                                </div>
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <div className="bg-white p-2 rounded shadow text-[10px] font-bold text-[#a50064] whitespace-nowrap">Scan Demo</div>
-                                                </div>
+                                        <div className="mt-6 flex flex-col items-center animate-in fade-in slide-in-from-top-4 p-6 bg-white rounded-xl border border-gray-100 shadow-inner">
+                                            <div className="p-4 bg-gray-50 rounded-2xl mb-4 border border-gray-100">
+                                                <QRCodeSVG value={momoLink} size={160} />
                                             </div>
-                                            <p className="text-gray-500 font-semibold mt-4 text-center">Scan QR code using your MoMo app. <br /> (This is a demo visual)</p>
+                                            <p className="text-gray-500 font-bold text-sm text-center">Scan QR code using MoMo app <br/> to pay <span className="text-[#a50064]">{FINAL_TOTAL.toLocaleString("vi-VN")}đ</span></p>
                                         </div>
                                     )}
                                 </label>
@@ -371,6 +388,60 @@ export default function CheckoutPage() {
 
                 </div>
             </div>
+
+            {/* MoMo Payment Modal (For Demo) */}
+            {showMoMoModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[2rem] w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
+                        {/* Header */}
+                        <div className="bg-[#a50064] p-6 text-white text-center relative">
+                            <button 
+                                onClick={() => setShowMoMoModal(false)}
+                                className="absolute right-4 top-4 p-1 hover:bg-white/20 rounded-full transition"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                                <div className="text-[#a50064] font-black text-2xl">M</div>
+                            </div>
+                            <h3 className="text-xl font-fredoka font-bold">MoMo Payment</h3>
+                            <p className="opacity-80 text-sm">Pawsitive Pet Spa</p>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-8 flex flex-col items-center">
+                            <div className="bg-gray-50 p-6 rounded-3xl mb-6 shadow-inner border border-gray-100">
+                                <QRCodeSVG value={momoLink} size={220} includeMargin={true} level="H" />
+                            </div>
+                            
+                            <div className="text-center space-y-2 mb-8">
+                                <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">Amount to Pay</p>
+                                <p className="text-4xl font-fredoka font-bold text-[#a50064]">{FINAL_TOTAL.toLocaleString("vi-VN")}đ</p>
+                            </div>
+
+                            <div className="w-full space-y-4">
+                                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl text-blue-700 text-sm font-semibold">
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                    Waiting for transaction confirmation...
+                                </div>
+                                
+                                <Button 
+                                    className="w-full py-4 bg-[#a50064] hover:bg-[#850052] border-none"
+                                    onClick={() => handlePlaceOrder()} // Finalize order
+                                    disabled={loading}
+                                >
+                                    {loading ? "Verifying..." : "Confirm I've Paid"}
+                                </Button>
+                            </div>
+                        </div>
+                        
+                        {/* Footer */}
+                        <div className="bg-gray-50 p-4 text-center border-t border-gray-100">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Momo Sandbox Testing Environment</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

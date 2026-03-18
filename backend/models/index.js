@@ -60,6 +60,14 @@ Vaccination.belongsTo(User, { foreignKey: 'administered_by', as: 'administered_b
 User.hasMany(Payment, { foreignKey: 'user_id', as: 'payments' });
 Payment.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
+// Order ↔ Payment
+Order.hasMany(Payment, { foreignKey: 'order_id', as: 'payments' });
+Payment.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
+
+// Appointment ↔ Payment
+Appointment.hasMany(Payment, { foreignKey: 'appointment_id', as: 'payments' });
+Payment.belongsTo(Appointment, { foreignKey: 'appointment_id', as: 'appointment' });
+
 // Product ↔ ProductReview
 Product.hasMany(ProductReview, { foreignKey: 'product_id', as: 'reviews', onDelete: 'CASCADE' });
 ProductReview.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });

@@ -18,6 +18,7 @@ import orderRoutes from './routes/order.routes.js';
 import appointmentRoutes from './routes/appointment.routes.js';
 import vaccinationRoutes from './routes/vaccination.routes.js';
 import aiRoutes from './routes/ai.routes.js';
+import paymentRoutes from './routes/payment/payment.routes.js';
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/vaccinations', vaccinationRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // ─── Health Check ────────────────────────────────────
 app.get('/health', (req, res) => {

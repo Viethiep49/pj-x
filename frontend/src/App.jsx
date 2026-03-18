@@ -23,6 +23,7 @@ import BookingPage from "./features/pricing/BookingPage";
 import ShopPage from "./features/shop/ShopPage";
 import PetScannerPage from "./features/scanner/PetScannerPage";
 import CheckoutPage from "./features/checkout/CheckoutPage";
+import CheckoutResult from "./features/checkout/CheckoutResult";
 
 // Pages — Customer (protected)
 import MyPetsPage from "./features/pets/MyPetsPage";
@@ -63,6 +64,11 @@ function App() {
               <Route path="/checkout" element={
                 <ProtectedRoute>
                   <CheckoutPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/checkout/result" element={
+                <ProtectedRoute>
+                  <CheckoutResult />
                 </ProtectedRoute>
               } />
               <Route path="/my-bookings" element={

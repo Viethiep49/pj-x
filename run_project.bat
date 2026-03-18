@@ -1,6 +1,9 @@
 @echo off
 setlocal enabledelayedexpansion
 
+REM Add Node.js to PATH for this session if it's not there
+set "PATH=%PATH%;C:\Program Files\nodejs"
+
 echo Starting Pet Grooming Project...
 
 REM ================== 1. AI Core ==================
