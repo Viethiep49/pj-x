@@ -54,7 +54,7 @@ export const createOrder = async (req, res, next) => {
             receiver_name,
             receiver_phone,
             notes,
-            status: payment_method ? 'confirmed' : 'pending',
+            status: 'pending', // Always start as pending
         }, { transaction: t });
 
         await OrderItem.bulkCreate(
@@ -62,7 +62,8 @@ export const createOrder = async (req, res, next) => {
             { transaction: t }
         );
 
-        if (payment_method) {
+        // Only create immediate completed payment for 'card' (mocking) or future COD
+        if (payment_method === 'card') {
             await Payment.create({
                 user_id: req.user.id,
                 order_id: order.id,
@@ -70,8 +71,9 @@ export const createOrder = async (req, res, next) => {
                 amount: final_total,
                 payment_method,
                 status: 'completed',
-                transaction_id: `TXN${Date.now()}`,
+                transaction_id: `TXN_MOCK_${Date.now()}`,
             }, { transaction: t });
+            await order.update({ status: 'confirmed' }, { transaction: t });
         }
 
         await t.commit();
