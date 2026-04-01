@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import { Search, LogOut } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useState, useRef, useEffect } from "react";
@@ -43,9 +43,11 @@ export default function AdminLayout() {
       {/* SIDEBAR */}
       <aside className="w-64 bg-white border-r shadow-sm p-6 flex flex-col justify-between">
         <div>
-          <h2 className="text-xl font-bold text-orange-500 mb-8">
-            Admin Dashboard 🐾
-          </h2>
+          <Link to="/admin">
+            <h2 className="text-xl font-bold text-orange-500 mb-8 hover:opacity-80 transition-opacity cursor-pointer">
+              Admin Dashboard 🐾
+            </h2>
+          </Link>
 
           <nav className="space-y-2 text-lg">
             <NavLink to="/admin/products" className={menuClass}>
