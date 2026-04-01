@@ -9,32 +9,30 @@ const ScanResult = sequelize.define(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-
     user_id: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
     },
-
     pet_id: {
       type: DataTypes.UUID,
       allowNull: true,
     },
-
-    image_url: {
-      type: DataTypes.STRING,
+    breed_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+    },
+    confidence: {
+      type: DataTypes.DECIMAL(5, 4),
       allowNull: false,
     },
-
-    predicted_breed: {
-      type: DataTypes.STRING,
+    image_url: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    top_3_predictions: {
+      type: DataTypes.JSONB,
       allowNull: true,
     },
-
-    confidence_score: {
-      type: DataTypes.FLOAT,
-      allowNull: true,
-    },
-
     created_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,

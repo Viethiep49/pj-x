@@ -24,6 +24,21 @@ export const getMyPets = async (req, res, next) => {
     }
 };
 
+export const getAllPets = async (req, res, next) => {
+    try {
+        const pets = await Pet.findAll({
+            include: [
+                { model: User, as: 'owner', attributes: ['full_name', 'email'] },
+                { model: Breed, as: 'breed_info', attributes: ['display_name'] },
+            ],
+            order: [['created_at', 'DESC']],
+        });
+        res.json({ success: true, data: pets });
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const createPet = async (req, res, next) => {
     try {
         const pet = await Pet.create({ ...req.body, owner_id: req.user.id });

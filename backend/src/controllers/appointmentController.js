@@ -86,6 +86,25 @@ export const getAllAppointments = async (req, res, next) => {
     }
 };
 
+export const adminCreateAppointment = async (req, res, next) => {
+    try {
+        const { user_id, pet_id, service_id, appointment_date, notes } = req.body;
+
+        const appointment = await Appointment.create({
+            user_id,
+            pet_id,
+            service_id,
+            appointment_date,
+            notes,
+            status: 'confirmed' // Admin bookings auto-confirm
+        });
+
+        res.status(201).json({ success: true, data: appointment });
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const updateAppointmentStatus = async (req, res, next) => {
     try {
         const appointment = await Appointment.findByPk(req.params.id);

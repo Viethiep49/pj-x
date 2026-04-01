@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PawPrint, Plus, Pencil, Trash2, X } from 'lucide-react';
+import { PawPrint, Plus, Pencil, Trash2, X, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import api from '../../services/api';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -90,6 +90,89 @@ const PetForm = ({ pet, onSave, onClose }) => {
     );
 };
 
+const PetRecommendations = ({ breedName, petName }) => {
+    const [recs, setRecs] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [expanded, setExpanded] = useState(false);
+
+    const fetchRecs = async () => {
+        if (!breedName || recs) {
+            setExpanded(!expanded);
+            return;
+        }
+        setLoading(true);
+        setExpanded(true);
+        try {
+            const res = await api.get(`/ai/recommendations?breedName=${encodeURIComponent(breedName)}`);
+            if (res.data.success) {
+                setRecs(res.data.data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch recs:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (!breedName) return null;
+
+    return (
+        <div className="mt-4 border-t border-cream/50 pt-4">
+            <button 
+                onClick={fetchRecs}
+                className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
+            >
+                <Sparkles className="w-4 h-4 fill-primary/20" />
+                {expanded ? 'Ẩn gợi ý thông minh' : `Xem gợi ý từ AI cho ${petName}`}
+                {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+
+            {expanded && (
+                <div className="mt-4 animate-in slide-in-from-top-2 duration-300">
+                    {loading ? (
+                        <div className="flex items-center gap-2 text-xs text-gray-400 font-bold italic py-2">
+                            <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                            Đang phân tích giống loài...
+                        </div>
+                    ) : recs ? (
+                        <div className="space-y-4">
+                            {recs.products?.length > 0 && (
+                                <div>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Sản phẩm khuyên dùng</p>
+                                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                                        {recs.products.map(p => (
+                                            <a key={p.id} href={`/shop?search=${p.name}`} className="flex-shrink-0 w-32 group">
+                                                <div className="aspect-square rounded-xl bg-cream/30 overflow-hidden mb-2 border border-cream/50 group-hover:border-primary/30 transition-colors">
+                                                    <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                                                </div>
+                                                <p className="text-[11px] font-bold text-gray-700 line-clamp-1">{p.name}</p>
+                                                <p className="text-[10px] text-primary font-bold">{Number(p.price).toLocaleString()}đ</p>
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {(recs.services?.length > 0 || recs.suggested_products?.length > 0) && (
+                                <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">💡 Lời khuyên cho {recs.breed?.display_name || breedName}</p>
+                                    <p className="text-[11px] text-gray-600 font-semibold leading-relaxed">
+                                        {recs.products?.[0]?.recommendation_reason || 
+                                         recs.suggested_products?.[0]?.recommendation_reason ||
+                                         `Giống ${breedName} cần được chú trọng dinh dưỡng và chăm sóc lông định kỳ. Xem các dịch vụ Spa của chúng tôi!`}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <p className="text-xs text-gray-400 italic">Không tìm thấy gợi ý cụ thể cho giống này.</p>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const MyPetsPage = () => {
     const [pets, setPets] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -173,6 +256,7 @@ const MyPetsPage = () => {
                                         {pet.medical_history}
                                     </div>
                                 )}
+                                <PetRecommendations breedName={pet.breed} petName={pet.name} />
                             </div>
                             <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0 justify-end">
                                 <button onClick={() => { setEditingPet(pet); setShowForm(true); }} className="p-3 hover:bg-cream rounded-xl transition-colors bg-white shadow-sm border border-gray-100">

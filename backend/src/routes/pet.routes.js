@@ -1,13 +1,15 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { getMyPets, createPet, updatePet, deletePet } from '../controllers/petController.js';
+import { getMyPets, getAllPets, createPet, updatePet, deletePet } from '../controllers/petController.js';
 import { protect } from '../middlewares/auth.js';
 import { validate } from '../middlewares/validate.js';
+import { authorize } from '../middlewares/rbac.js';
 
 const router = express.Router();
 
 router.use(protect);
 
+router.get('/admin', authorize('admin', 'staff'), getAllPets);
 router.get('/', getMyPets);
 router.post('/', [
     body('name').notEmpty().withMessage('Pet name required'),

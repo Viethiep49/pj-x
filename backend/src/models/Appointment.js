@@ -6,14 +6,14 @@ const Appointment = sequelize.define("Appointment",{
   user_id:DataTypes.UUID,
   pet_id:DataTypes.UUID,
   service_id:DataTypes.UUID,
-  appointment_time:DataTypes.DATE,
+  appointment_date:DataTypes.DATE,
   status:DataTypes.STRING,
   notes:DataTypes.TEXT
 },{
   tableName:"appointments",
   timestamps:true,
   createdAt:"created_at",
-  updatedAt:false
+  updatedAt:"updated_at"
 });
 
 export default Appointment;

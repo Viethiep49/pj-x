@@ -6,7 +6,8 @@ const OrderItem = sequelize.define("OrderItem",{
   order_id:DataTypes.UUID,
   product_id:DataTypes.UUID,
   quantity:DataTypes.INTEGER,
-  price:DataTypes.DECIMAL
+  unit_price:DataTypes.DECIMAL,
+  subtotal:DataTypes.DECIMAL
 },{
   tableName:"order_items",
   timestamps:false

@@ -10,6 +10,7 @@ import Breed from "./Breed.js";
 import BreedRecommendation from "./BreedRecommendation.js";
 import Service from "./Service.js";
 import ScanResult from "./ScanResult.js";
+import Appointment from "./Appointment.js";
 
 // User - Pet
 User.hasMany(Pet, { foreignKey: "owner_id" });
@@ -38,9 +39,21 @@ BreedRecommendation.belongsTo(Breed, { foreignKey: "breed_id" });
 BreedRecommendation.belongsTo(Product, { foreignKey: "product_id", as: "product" });
 BreedRecommendation.belongsTo(Service, { foreignKey: "service_id", as: "service" });
 
-// ScanResult - User
+// ScanResult Associations
 User.hasMany(ScanResult, { foreignKey: "user_id" });
 ScanResult.belongsTo(User, { foreignKey: "user_id" });
+Breed.hasMany(ScanResult, { foreignKey: "breed_id" });
+ScanResult.belongsTo(Breed, { foreignKey: "breed_id" });
+
+// Appointment Associations
+User.hasMany(Appointment, { foreignKey: "user_id", as: "appointments" });
+Appointment.belongsTo(User, { foreignKey: "user_id", as: "customer" });
+
+Pet.hasMany(Appointment, { foreignKey: "pet_id", as: "appointments" });
+Appointment.belongsTo(Pet, { foreignKey: "pet_id", as: "pet" });
+
+Service.hasMany(Appointment, { foreignKey: "service_id", as: "appointments" });
+Appointment.belongsTo(Service, { foreignKey: "service_id", as: "service" });
 
 export {
   User,
@@ -55,4 +68,5 @@ export {
   BreedRecommendation,
   Service,
   ScanResult,
+  Appointment,
 };

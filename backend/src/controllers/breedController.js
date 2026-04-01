@@ -69,16 +69,53 @@ export const getSmartRecommendations = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'breedName query parameter is required' });
         }
 
+        // Must find breed ID first because AI Core uses ID in path
         const breed = await Breed.findOne({ where: { name: breedName } });
-        if (!breed) {
-            return res.json({ 
-                success: true, 
-                data: { breed: null, products: [], services: [], message: 'Breed not found' } 
-            });
+        
+        // Try to fetch from AI Core (Python) for smarter logic (fallbacks etc.)
+        if (breed) {
+            try {
+                const aiCoreUrl = process.env.AICORE_URL || 'http://localhost:8000';
+                const response = await fetch(`${aiCoreUrl}/api/ai/recommendations/${breed.id}`);
+                const aiData = await response.json();
+                
+                if (aiData.success) {
+                    return res.json({
+                        success: true,
+                        data: {
+                            breed: aiData.breed,
+                            products: aiData.recommendations.filter(r => r.product_id).map(r => ({
+                                id: r.product_id,
+                                name: r.product_name,
+                                price: r.price,
+                                sale_price: r.sale_price,
+                                image_url: r.image_url,
+                                slug: r.slug,
+                                recommendation_reason: r.recommendation_reason
+                            })),
+                            services: aiData.recommendations.filter(r => r.service_id).map(r => ({
+                                id: r.service_id,
+                                name: r.service_name,
+                                price: r.service_price,
+                                recommendation_reason: r.recommendation_reason
+                            })),
+                            suggested_products: aiData.suggested_products || []
+                        }
+                    });
+                }
+            } catch (aiErr) {
+                console.warn("AI Core unreachable, falling back to local basic recommendation:", aiErr.message);
+            }
+        }
+
+        // Local fallback (Existing basic logic)
+        const localBreed = breed || await Breed.findOne({ where: { name: breedName } });
+        if (!localBreed) {
+            return res.json({ success: true, data: { breed: null, products: [], services: [] } });
         }
 
         const recommendations = await BreedRecommendation.findAll({
-            where: { breed_id: breed.id },
+            where: { breed_id: localBreed.id },
             include: [
                 { model: Product, as: 'product', required: false },
                 { model: Service, as: 'service', required: false },
@@ -86,21 +123,15 @@ export const getSmartRecommendations = async (req, res, next) => {
             order: [['priority', 'ASC']],
         });
 
-        const products = recommendations
-            .filter(r => r.product)
-            .map(r => ({
-                ...r.product.toJSON(),
-                recommendation_type: r.recommendation_type,
-                recommendation_reason: r.recommendation_reason,
-            }));
+        const products = recommendations.filter(r => r.product).map(r => ({
+            ...r.product.toJSON(),
+            recommendation_reason: r.recommendation_reason
+        }));
 
-        const services = recommendations
-            .filter(r => r.service)
-            .map(r => ({
-                ...r.service.toJSON(),
-                recommendation_type: r.recommendation_type,
-                recommendation_reason: r.recommendation_reason,
-            }));
+        const services = recommendations.filter(r => r.service).map(r => ({
+            ...r.service.toJSON(),
+            recommendation_reason: r.recommendation_reason
+        }));
 
         res.json({
             success: true,

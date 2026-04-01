@@ -99,6 +99,55 @@ export const getAllOrders = async (req, res, next) => {
     }
 };
 
+export const adminCreateOrder = async (req, res, next) => {
+    const t = await sequelize.transaction();
+    try {
+        const { user_id, items, delivery_method, shipping_address, receiver_name, receiver_phone, notes } = req.body;
+
+        let total_amount = 0;
+        const itemsWithPrice = [];
+
+        for (const item of items) {
+            const product = await Product.findByPk(item.product_id);
+            if (!product) {
+                await t.rollback();
+                return res.status(400).json({ success: false, message: `Product ${item.product_id} not found` });
+            }
+            const unit_price = product.sale_price || product.price;
+            const subtotal = unit_price * item.quantity;
+            total_amount += subtotal;
+            itemsWithPrice.push({ product_id: item.product_id, quantity: item.quantity, unit_price, subtotal });
+        }
+
+        const shipping_fee = delivery_method === 'shipping' ? 30000 : 0;
+        const final_total = total_amount + shipping_fee;
+
+        const order = await Order.create({
+            user_id,
+            order_number: generateOrderNumber(),
+            total_amount: final_total,
+            delivery_method,
+            shipping_address,
+            shipping_fee,
+            receiver_name,
+            receiver_phone,
+            notes,
+            status: 'confirmed', // Admin orders start as confirmed
+        }, { transaction: t });
+
+        await OrderItem.bulkCreate(
+            itemsWithPrice.map(i => ({ ...i, order_id: order.id })),
+            { transaction: t }
+        );
+
+        await t.commit();
+        res.status(201).json({ success: true, data: order });
+    } catch (err) {
+        await t.rollback();
+        next(err);
+    }
+};
+
 export const updateOrderStatus = async (req, res, next) => {
     try {
         const order = await Order.findByPk(req.params.id);
