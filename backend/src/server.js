@@ -70,6 +70,11 @@ const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ Database connected successfully');
+    
+    // Tự động tạo bảng (sync) nếu chưa có - Quan trọng cho Docker mới
+    await sequelize.sync({ alter: false }); 
+    console.log('📦 Database models synchronized');
+
     app.listen(PORT, () => {
       console.log(`🚀 Pawsitive API running on http://localhost:${PORT}`);
     });

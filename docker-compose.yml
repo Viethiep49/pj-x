@@ -1,0 +1,76 @@
+services:
+  # 1. Cơ sở dữ liệu PostgreSQL (Database)
+  db:
+    image: postgres:15-alpine
+    container_name: pet-grooming-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: pet_grooming
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. AI Core (Python FastAPI)
+  aicore:
+    build:
+      context: ./aicore
+    container_name: pet-grooming-aicore
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: 123
+      DB_NAME: pet_grooming
+      DB_PORT: 5432
+    # aicore phụ thuộc vào database phải khởi động trước
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  # 3. Backend (Node.js)
+  backend:
+    build:
+      context: ./backend
+    container_name: pet-grooming-backend
+    restart: always
+    environment:
+      PORT: 5001
+      NODE_ENV: production
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: 123
+      DB_NAME: pet_grooming
+      DB_PORT: 5432
+      JWT_SECRET: your-docker-secret-random-strings
+      AICORE_URL: http://aicore:8000
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5001:5001"
+
+  # 4. Frontend (React / Vite qua Nginx)
+  frontend:
+    build:
+      context: ./frontend
+    container_name: pet-grooming-frontend
+    restart: always
+    depends_on:
+      - backend
+      - aicore
+    ports:
+      - "80:80"
+
+# Lưu trữ dữ liệu DB bền vững
+volumes:
+  pgdata:
