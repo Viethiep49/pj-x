@@ -29,6 +29,8 @@ import AdminQuickActions from './components/AdminQuickActions';
 const AdminDashboard = () => {
     const [appointments, setAppointments] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [breeds, setBreeds] = useState([]);
     const [aiStats, setAiStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [tab, setTab] = useState('overview');
@@ -37,17 +39,23 @@ const AdminDashboard = () => {
     // Pagination State
     const [apptPage, setApptPage] = useState(1);
     const [orderPage, setOrderPage] = useState(1);
-    const itemsPerPage = 8;
+    const [userPage, setUserPage] = useState(1);
+    const [breedPage, setBreedPage] = useState(1);
+    const itemsPerPage = 20; // Updated to 20 as per user request
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [apptRes, orderRes] = await Promise.all([
+            const [apptRes, orderRes, userRes, breedRes] = await Promise.all([
                 api.get('/appointments/admin'),
                 api.get('/orders/admin'),
+                api.get('/users'),
+                api.get('/breeds'),
             ]);
             setAppointments(apptRes.data.data || []);
             setOrders(orderRes.data.data || []);
+            setUsers(userRes.data.data || []);
+            setBreeds(breedRes.data.data || []);
             
             // Fetch AI Stats from port 8000 (Python AI Core)
             try {
@@ -152,7 +160,9 @@ const AdminDashboard = () => {
                     { id: 'overview', label: 'Tổng quan', icon: TrendingUp },
                     { id: 'diagnostics', label: 'Chẩn đoán AI 🧠', icon: Sparkles },
                     { id: 'appointments', label: 'Lịch hẹn', icon: CalendarDays },
-                    { id: 'orders', label: 'Đơn hàng', icon: ShoppingBag }
+                    { id: 'orders', label: 'Đơn hàng', icon: ShoppingBag },
+                    { id: 'users', label: 'Khách hàng', icon: Users },
+                    { id: 'breeds', label: 'Giống loài', icon: Dog }
                 ].map(t => (
                     <button
                         key={t.id}
@@ -373,6 +383,87 @@ const AdminDashboard = () => {
                             <button 
                                 disabled={orderPage === Math.ceil(orders.length / itemsPerPage)}
                                 onClick={() => setOrderPage(p => p + 1)}
+                                className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {tab === 'users' && (
+                <div className="space-y-4">
+                    <div className="grid gap-3">
+                        {users.slice((userPage - 1) * itemsPerPage, userPage * itemsPerPage).map(u => (
+                            <Card key={u.id} className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group">
+                                <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400 font-bold">
+                                    {u.full_name?.charAt(0)}
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-fredoka font-bold text-gray-800 italic">{u.full_name}</h4>
+                                    <p className="text-xs text-gray-500 font-semibold">{u.email}</p>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Vai trò: {u.role}</p>
+                                </div>
+                                <div className="flex-shrink-0">
+                                    <button className="px-4 py-2 border-2 border-cream text-xs font-bold rounded-xl hover:bg-peach transition-colors">Chi tiết</button>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                    {/* Pagination Controls */}
+                    {users.length > itemsPerPage && (
+                        <div className="flex items-center justify-center gap-4 pt-4 font-bold text-sm text-gray-500">
+                             <button 
+                                disabled={userPage === 1}
+                                onClick={() => setUserPage(p => p - 1)}
+                                className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <span className="text-gray-800">Trang {userPage} / {Math.ceil(users.length / itemsPerPage)}</span>
+                            <button 
+                                disabled={userPage === Math.ceil(users.length / itemsPerPage)}
+                                onClick={() => setUserPage(p => p + 1)}
+                                className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {tab === 'breeds' && (
+                <div className="space-y-4">
+                    <div className="grid gap-3">
+                        {breeds.slice((breedPage - 1) * itemsPerPage, breedPage * itemsPerPage).map(b => (
+                            <Card key={b.id} className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group">
+                                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                                    <Dog className="w-6 h-6" />
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="font-fredoka font-bold text-gray-800 italic">{b.display_name}</h4>
+                                    <p className="text-xs text-gray-300 font-bold italic">{b.breed_name}</p>
+                                </div>
+                                <div className="px-4 py-2 bg-cream/50 text-xs font-bold rounded-xl">ID: {b.id}</div>
+                            </Card>
+                        ))}
+                    </div>
+                    {/* Pagination Controls */}
+                    {breeds.length > itemsPerPage && (
+                        <div className="flex items-center justify-center gap-4 pt-4 font-bold text-sm text-gray-500">
+                             <button 
+                                disabled={breedPage === 1}
+                                onClick={() => setBreedPage(p => p - 1)}
+                                className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <span className="text-gray-800">Trang {breedPage} / {Math.ceil(breeds.length / itemsPerPage)}</span>
+                            <button 
+                                disabled={breedPage === Math.ceil(breeds.length / itemsPerPage)}
+                                onClick={() => setBreedPage(p => p + 1)}
                                 className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
                             >
                                 <ChevronRight className="w-5 h-5" />

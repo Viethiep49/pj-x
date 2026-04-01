@@ -1,5 +1,7 @@
 # 🐳 Hướng dẫn chạy dự án với Docker
 
+Dự án đã được cấu hình để chạy toàn bộ các thành phần (Database, AI Core, Backend, Frontend) trong một môi trường đồng nhất. Điều này giúp tránh hoàn toàn các lỗi về thư viện hoặc phiên bản Node/Python khác nhau giữa các máy.
+
 ## 🚀 Cách khởi động
 
 1.  **Cài đặt Docker**: Đảm bảo máy tính đã cài đặt **Docker Desktop** (cho Windows/Mac) hoặc **Docker Engine** (cho Linux).
