@@ -51,6 +51,7 @@ yarn-error.log*
 
 # --- AI Agents & IDE Settings (Local AI configs) ---
 # Các file cấu hình AI local mà bạn yêu cầu
+.agent/
 .agents/
 .claude/
 .cursor/

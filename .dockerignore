@@ -1,0 +1,51 @@
+# Docker Ignore File
+
+# Git and AI configs
+.git
+.agent/
+.agents/
+.claude/
+.cursor/
+.windsurf/
+.copilot/
+.history/
+chat_history/
+
+# Node modules (already covered in subfolder dockerfiles)
+node_modules/
+dist/
+build/
+
+# Python envs and caches
+venv/
+env/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Log files
+*.log
+aicore_api.log
+
+# Data and models (to avoid large copies)
+datasets/
+data/
+raw_data/
+*.pt
+*.pth
+*.h5
+*.onnx
+*.bin
+*.model
+*.gguf
+
+# Misc
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Ignore backend and frontend (they have their own contexts)
+# Depends on how the build context is set in docker-compose

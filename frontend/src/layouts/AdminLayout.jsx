@@ -1,12 +1,14 @@
-import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Search, LogOut } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [searchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'overview';
 
   const [open, setOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -30,10 +32,10 @@ export default function AdminLayout() {
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const menuClass = ({ isActive }) =>
-    `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+  const menuClass = (tabId) =>
+    `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer
      ${
-       isActive
+       currentTab === tabId
          ? "bg-orange-100 text-orange-500 font-bold shadow-sm"
          : "text-gray-600 hover:bg-orange-50 hover:text-orange-500"
      }`;
@@ -50,17 +52,20 @@ export default function AdminLayout() {
           </Link>
 
           <nav className="space-y-2 text-lg">
-            <NavLink to="/admin/products" className={menuClass}>
-              📦 Products
+            <NavLink to="/admin?tab=overview" className={menuClass('overview')}>
+              📊 Tổng quan
             </NavLink>
-            <NavLink to="/admin/breeds" className={menuClass}>
-              🐕 Breeds
+            <NavLink to="/admin?tab=orders" className={menuClass('orders')}>
+              🧾 Đơn hàng
             </NavLink>
-            <NavLink to="/admin/orders" className={menuClass}>
-              🧾 Orders
+            <NavLink to="/admin?tab=appointments" className={menuClass('appointments')}>
+              📅 Lịch hẹn
             </NavLink>
-            <NavLink to="/admin/users" className={menuClass}>
-              👤 Users
+            <NavLink to="/admin?tab=users" className={menuClass('users')}>
+              👤 Khách hàng
+            </NavLink>
+            <NavLink to="/admin?tab=breeds" className={menuClass('breeds')}>
+              🐕 Giống thú cưng
             </NavLink>
           </nav>
         </div>

@@ -1,0 +1,28 @@
+# aicore Specific Docker Ignore
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+venv/
+.env
+
+# Large datasets or models
+datasets/
+data/
+raw_data/
+web_model/
+*.h5
+*.onnx
+*.bin
+*.model
+*.gguf
+
+# Documentation
+docs/
+*.md
+
+# Logs
+*.log

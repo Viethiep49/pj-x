@@ -13,8 +13,18 @@ import {
     Sparkles,
     ChevronDown,
     ChevronUp,
-    ChevronLeft
+    ChevronLeft,
+    Clock,
+    Filter,
+    DollarSign,
+    Package,
+    UserCheck,
+    Calendar,
+    BarChart3,
+    PieChart
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 import Card from '../../components/ui/Card';
 import { 
@@ -27,21 +37,23 @@ import {
 import AdminQuickActions from './components/AdminQuickActions';
 
 const AdminDashboard = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const currentTab = searchParams.get('tab') || 'overview';
     const [appointments, setAppointments] = useState([]);
     const [orders, setOrders] = useState([]);
     const [users, setUsers] = useState([]);
     const [breeds, setBreeds] = useState([]);
     const [aiStats, setAiStats] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [tab, setTab] = useState('overview');
-    const [period, setPeriod] = useState('month');
+    const [period, setPeriod] = useState('all'); // Default to 'all' to show overall data
+    const [isPeriodDropdownOpen, setIsPeriodDropdownOpen] = useState(false);
 
     // Pagination State
     const [apptPage, setApptPage] = useState(1);
     const [orderPage, setOrderPage] = useState(1);
     const [userPage, setUserPage] = useState(1);
     const [breedPage, setBreedPage] = useState(1);
-    const itemsPerPage = 20; // Updated to 20 as per user request
+    const itemsPerPage = 20;
 
     const fetchData = async () => {
         setLoading(true);
@@ -95,20 +107,47 @@ const AdminDashboard = () => {
     };
 
     const stats = useMemo(() => {
+        // Prepare date filters
+        const now = new Date();
+        const filteredOrders = orders.filter(o => {
+            if (period === 'all') return true;
+            const oDate = new Date(o.created_at);
+            if (period === 'day') return oDate.toDateString() === now.toDateString();
+            if (period === 'week') {
+                const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                return oDate >= weekAgo;
+            }
+            if (period === 'month') return oDate.getMonth() === now.getMonth() && oDate.getFullYear() === now.getFullYear();
+            if (period === 'year') return oDate.getFullYear() === now.getFullYear();
+            return true;
+        });
+
         const totalRevenue = orders
             .filter(o => o.status !== 'cancelled')
             .reduce((sum, o) => sum + Number(o.total_amount), 0);
         
+        const periodRevenue = filteredOrders
+            .filter(o => o.status !== 'cancelled')
+            .reduce((sum, o) => sum + Number(o.total_amount), 0);
+
         const pendingAppts = appointments.filter(a => a.status === 'pending').length;
         const pendingOrders = orders.filter(o => o.status === 'pending').length;
+        const completedOrders = orders.filter(o => o.status === 'delivered' || o.status === 'completed').length;
+        const cancelledOrders = orders.filter(o => o.status === 'cancelled').length;
+        const totalOrders = orders.length;
 
         return {
             totalRevenue,
+            periodRevenue,
             pendingAppts,
             pendingOrders,
-            totalUsers: new Set(orders.map(o => o.user_id)).size + new Set(appointments.map(a => a.user_id)).size
+            totalUsers: users.length,
+            totalBreeds: breeds.length,
+            completedOrders,
+            cancelledOrders,
+            totalOrders
         };
-    }, [appointments, orders]);
+    }, [appointments, orders, users, breeds, period]);
 
     if (loading) return (
         <div className="flex items-center justify-center min-h-[400px]">
@@ -126,32 +165,123 @@ const AdminDashboard = () => {
         cancelled: 'bg-red-100 text-red-600'
     };
 
+    const periodOptions = [
+        { value: 'day', label: 'Hôm nay', icon: Calendar },
+        { value: 'week', label: '7 ngày qua', icon: BarChart3 },
+        { value: 'month', label: 'Tháng này', icon: CalendarDays },
+        { value: 'year', label: 'Năm nay', icon: TrendingUp },
+        { value: 'all', label: 'Tất cả thời gian', icon: Clock }
+    ];
+
+    const currentPeriodLabel = periodOptions.find(p => p.value === period)?.label || 'Tất cả thời gian';
+
     return (
         <div className="max-w-7xl mx-auto py-10 px-6 font-nunito space-y-10 animate-fade-in">
+            {/* Header & Filter */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-fredoka font-bold text-gray-800">Quản trị Hệ thống</h1>
+                    <p className="text-gray-400 font-semibold italic text-sm">Cập nhật lúc: {new Date().toLocaleTimeString()}</p>
+                </div>
+                <div className="relative">
+                    <button 
+                        onClick={() => setIsPeriodDropdownOpen(!isPeriodDropdownOpen)}
+                        className="flex items-center gap-3 bg-white px-4 py-3 rounded-2xl shadow-sm border border-cream hover:shadow-md transition-all duration-200 cursor-pointer"
+                    >
+                        <div className="p-2 bg-peach/30 text-primary rounded-xl">
+                            <Filter className="w-5 h-5" />
+                        </div>
+                        <span className="font-bold text-gray-600">{currentPeriodLabel}</span>
+                        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isPeriodDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    <AnimatePresence>
+                        {isPeriodDropdownOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-cream overflow-hidden z-50"
+                            >
+                                {periodOptions.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => {
+                                            setPeriod(option.value);
+                                            setIsPeriodDropdownOpen(false);
+                                        }}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                                            period === option.value 
+                                                ? 'bg-primary/10 text-primary font-bold' 
+                                                : 'text-gray-600 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        <option.icon className="w-4 h-4" />
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </div>
+
             {/* Header Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                    { label: 'Doanh thu', value: `${stats.totalRevenue.toLocaleString()}đ`, icon: ShoppingBag, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-                    { label: 'Lịch hẹn mới', value: stats.pendingAppts, icon: CalendarDays, color: 'text-amber-500', bg: 'bg-amber-50' },
-                    { label: 'Đơn hàng mới', value: stats.pendingOrders, icon: CheckCircle2, color: 'text-blue-500', bg: 'bg-blue-50' },
-                    { label: 'Khách hàng', value: stats.totalUsers, icon: Users, color: 'text-primary', bg: 'bg-peach' }
-                ].map((s, i) => (
-                    <Card key={i} className="p-6 border-none shadow-sm hover:shadow-md transition-shadow group">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">{s.label}</p>
-                                <h3 className="text-3xl font-fredoka font-bold text-gray-800">{s.value}</h3>
-                            </div>
-                            <div className={`${s.bg} ${s.color} p-3 rounded-2xl group-hover:scale-110 transition-transform`}>
-                                <s.icon className="w-6 h-6" />
-                            </div>
+                <Card className="p-6 border-none shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tổng doanh thu</p>
+                            <h3 className="text-3xl font-fredoka font-bold text-gray-800">{stats.totalRevenue.toLocaleString()}đ</h3>
+                            <p className="text-[10px] font-bold text-gray-400 mt-1 italic">Kỳ này: {stats.periodRevenue.toLocaleString()}đ</p>
                         </div>
-                        <div className="mt-4 flex items-center gap-1 text-xs font-bold text-emerald-500 bg-emerald-50 w-max px-2 py-1 rounded-lg">
-                            <TrendingUp className="w-3 h-3" />
-                            <span>+12.5%</span>
+                        <div className="bg-emerald-50 text-emerald-500 p-3 rounded-2xl group-hover:scale-110 transition-transform">
+                            <DollarSign className="w-6 h-6" />
                         </div>
-                    </Card>
-                ))}
+                    </div>
+                </Card>
+                
+                <Card className="p-6 border-none shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tổng đơn hàng</p>
+                            <h3 className="text-3xl font-fredoka font-bold text-gray-800">{stats.totalOrders}</h3>
+                            <p className="text-[10px] font-bold text-gray-400 mt-1 italic">
+                                {stats.completedOrders} hoàn thành • {stats.cancelledOrders} đã hủy
+                            </p>
+                        </div>
+                        <div className="bg-blue-50 text-blue-500 p-3 rounded-2xl group-hover:scale-110 transition-transform">
+                            <Package className="w-6 h-6" />
+                        </div>
+                    </div>
+                </Card>
+                
+                <Card className="p-6 border-none shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tổng khách hàng</p>
+                            <h3 className="text-3xl font-fredoka font-bold text-gray-800">{stats.totalUsers}</h3>
+                            <p className="text-[10px] font-bold text-gray-400 mt-1 italic">{stats.pendingAppts} lịch hẹn chờ xử lý</p>
+                        </div>
+                        <div className="bg-primary/10 text-primary p-3 rounded-2xl group-hover:scale-110 transition-transform">
+                            <UserCheck className="w-6 h-6" />
+                        </div>
+                    </div>
+                </Card>
+                
+                <Card className="p-6 border-none shadow-sm hover:shadow-md transition-shadow group">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Giống thú cưng</p>
+                            <h3 className="text-3xl font-fredoka font-bold text-gray-800">{stats.totalBreeds}</h3>
+                            <p className="text-[10px] font-bold text-gray-400 mt-1 italic">{stats.pendingOrders} đơn hàng chờ xử lý</p>
+                        </div>
+                        <div className="bg-amber-50 text-amber-500 p-3 rounded-2xl group-hover:scale-110 transition-transform">
+                            <Dog className="w-6 h-6" />
+                        </div>
+                    </div>
+                </Card>
             </div>
 
             {/* Navigation Tabs */}
@@ -166,9 +296,9 @@ const AdminDashboard = () => {
                 ].map(t => (
                     <button
                         key={t.id}
-                        onClick={() => setTab(t.id)}
+                        onClick={() => setSearchParams({ tab: t.id })}
                         className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-                            tab === t.id 
+                            currentTab === t.id 
                             ? 'bg-white text-primary shadow-sm scale-[1.02]' 
                             : 'text-gray-500 hover:text-primary hover:bg-white/50'
                         }`}
@@ -180,298 +310,342 @@ const AdminDashboard = () => {
             </div>
 
             {/* Content Area */}
-            {tab === 'overview' && (
-                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-                    <AdminQuickActions onActionComplete={fetchData} />
-                    
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <Card className="p-8 border-none shadow-sm">
-                            <h3 className="text-xl font-fredoka font-bold text-gray-800 mb-6">Biểu đồ doanh thu</h3>
-                            <RevenueChart appointments={appointments} orders={orders} period={period} />
-                        </Card>
-                        <Card className="p-8 border-none shadow-sm">
-                            <h3 className="text-xl font-fredoka font-bold text-gray-800 mb-6">Phân bổ dịch vụ</h3>
-                            <ServiceDistribution appointments={appointments} />
-                        </Card>
-                    </div>
-                </div>
-            )}
+            <AnimatePresence mode="wait">
+                {currentTab === 'overview' && (
+                    <motion.div 
+                        key="overview"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-8"
+                    >
+                        <AdminQuickActions onActionComplete={fetchData} />
+                        
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <Card className="p-8 border-none shadow-sm">
+                                <h3 className="text-xl font-fredoka font-bold text-gray-800 mb-6">Biểu đồ doanh thu</h3>
+                                <RevenueChart appointments={appointments} orders={orders} period={period} />
+                            </Card>
+                            <Card className="p-8 border-none shadow-sm">
+                                <h3 className="text-xl font-fredoka font-bold text-gray-800 mb-6">Phân bổ dịch vụ</h3>
+                                <ServiceDistribution appointments={appointments} />
+                            </Card>
+                        </div>
+                    </motion.div>
+                )}
 
-            {tab === 'diagnostics' && (
-                <div className="space-y-8 animate-in fade-in duration-500">
-                    {!aiStats ? (
-                        <Card className="p-20 text-center border-none shadow-sm flex flex-col items-center">
-                            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
-                                <AlertCircle className="w-8 h-8" />
-                            </div>
-                            <h3 className="text-2xl font-fredoka font-bold text-gray-800 mb-2">AICore Offline</h3>
-                            <p className="text-gray-400 font-semibold max-w-md mx-auto italic">
-                                Không thể kết nối với trí tuệ nhân tạo. Hãy đảm bảo service Python đã được khởi động trên cổng 8000.
-                            </p>
-                        </Card>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <Card className="lg:col-span-2 p-8 border-none shadow-sm">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h3 className="text-xl font-fredoka font-bold text-gray-800">Xu hướng nhận diện giống loài (7 ngày qua)</h3>
-                                        <div className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase rounded-full tracking-widest animate-pulse">Live AI Feed</div>
-                                    </div>
-                                    <AIScanTrendChart data={aiStats.scans.trend} />
-                                </Card>
-                                <Card className="p-8 border-none shadow-sm">
-                                    <h3 className="text-xl font-fredoka font-bold text-gray-800 mb-6">Độ chính xác trung bình</h3>
-                                    <div className="flex flex-col items-center justify-center py-8">
-                                        <div className="relative w-32 h-32 flex items-center justify-center">
-                                            <svg className="w-full h-full transform -rotate-90">
-                                                <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-cream" />
-                                                <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="12" fill="transparent" 
-                                                    strokeDasharray={364}
-                                                    strokeDashoffset={364 - (aiStats.scans.avg_confidence * 364)}
-                                                    className="text-primary transition-all duration-1000" />
-                                            </svg>
-                                            <span className="absolute text-2xl font-fredoka font-bold text-gray-800">
-                                                {(aiStats.scans.avg_confidence * 100).toFixed(1)}%
-                                            </span>
+                {currentTab === 'diagnostics' && (
+                    <motion.div 
+                        key="diagnostics"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-8"
+                    >
+                        {!aiStats ? (
+                            <Card className="p-20 text-center border-none shadow-sm flex flex-col items-center">
+                                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
+                                    <AlertCircle className="w-8 h-8" />
+                                </div>
+                                <h3 className="text-2xl font-fredoka font-bold text-gray-800 mb-2">AICore Offline</h3>
+                                <p className="text-gray-400 font-semibold max-w-md mx-auto italic">
+                                    Không thể kết nối với trí tuệ nhân tạo. Hãy đảm bảo service Python đã được khởi động trên cổng 8000.
+                                </p>
+                            </Card>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                    <Card className="lg:col-span-2 p-8 border-none shadow-sm">
+                                        <div className="flex justify-between items-center mb-6">
+                                            <h3 className="text-xl font-fredoka font-bold text-gray-800">Xu hướng nhận diện giống loài (7 ngày qua)</h3>
+                                            <div className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase rounded-full tracking-widest animate-pulse">Live AI Feed</div>
                                         </div>
-                                        <p className="mt-6 text-sm text-gray-500 font-bold uppercase tracking-widest">AI Confidence Index</p>
-                                    </div>
-                                </Card>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <Card className="p-8 border-none shadow-sm">
-                                    <h3 className="text-xl font-fredoka font-bold text-gray-800 mb-6">Top Giống Thú Cưng Được Quét</h3>
-                                    <TopBreedsChart data={aiStats.scans.top_breeds} />
-                                </Card>
-                                <div className="space-y-4">
-                                    <Card className="p-6 bg-indigo-600 text-white border-none shadow-lg shadow-indigo-200">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-indigo-100 text-xs font-bold uppercase mb-1">Tổng lượt quét</p>
-                                                <h4 className="text-4xl font-fredoka font-bold">{aiStats.scans.total}</h4>
+                                        <AIScanTrendChart data={aiStats.scans.trend} />
+                                    </Card>
+                                    <Card className="p-8 border-none shadow-sm">
+                                        <h3 className="text-xl font-fredoka font-bold text-gray-800 mb-6">Độ chính xác trung bình</h3>
+                                        <div className="flex flex-col items-center justify-center py-8">
+                                            <div className="relative w-32 h-32 flex items-center justify-center">
+                                                <svg className="w-full h-full transform -rotate-90">
+                                                    <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-cream" />
+                                                    <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="12" fill="transparent" 
+                                                        strokeDasharray={364}
+                                                        strokeDashoffset={364 - (aiStats.scans.avg_confidence * 364)}
+                                                        className="text-primary transition-all duration-1000" />
+                                                </svg>
+                                                <span className="absolute text-2xl font-fredoka font-bold text-gray-800">
+                                                    {(aiStats.scans.avg_confidence * 100).toFixed(1)}%
+                                                </span>
                                             </div>
-                                            <Users className="w-10 h-10 opacity-20" />
+                                            <p className="mt-6 text-sm text-gray-500 font-bold uppercase tracking-widest">AI Confidence Index</p>
                                         </div>
-                                        <p className="mt-4 text-sm text-indigo-100 italic">Ghi nhận từ {aiStats.scans.unique_users} người dùng khác nhau</p>
-                                    </Card>
-                                    <Card className="p-6 bg-white border-none shadow-sm">
-                                        <h4 className="text-lg font-fredoka font-bold text-gray-800 mb-4">Ghi chú vận hành AI</h4>
-                                        <ul className="space-y-3">
-                                            {[
-                                                'Người dùng Poodle chiếm ưu thế trong các lượt quét.',
-                                                'Tỷ lệ chính xác (Confidence) duy trì trên 80%.',
-                                                'Cao điểm quét diễn ra vào các ngày cuối tuần.'
-                                            ].map((note, i) => (
-                                                <li key={i} className="flex items-start gap-3 text-sm text-gray-500 font-semibold italic">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                                                    {note}
-                                                </li>
-                                            ))}
-                                        </ul>
                                     </Card>
                                 </div>
+                                
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <Card className="p-8 border-none shadow-sm">
+                                        <h3 className="text-xl font-fredoka font-bold text-gray-800 mb-6">Top Giống Thú Cưng Được Quét</h3>
+                                        <TopBreedsChart data={aiStats.scans.top_breeds} />
+                                    </Card>
+                                    <div className="space-y-4">
+                                        <Card className="p-6 bg-indigo-600 text-white border-none shadow-lg shadow-indigo-200">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="text-indigo-100 text-xs font-bold uppercase mb-1">Tổng lượt quét</p>
+                                                    <h4 className="text-4xl font-fredoka font-bold">{aiStats.scans.total}</h4>
+                                                </div>
+                                                <Users className="w-10 h-10 opacity-20" />
+                                            </div>
+                                            <p className="mt-4 text-sm text-indigo-100 italic">Ghi nhận từ {aiStats.scans.unique_users} người dùng khác nhau</p>
+                                        </Card>
+                                        <Card className="p-6 bg-white border-none shadow-sm">
+                                            <h4 className="text-lg font-fredoka font-bold text-gray-800 mb-4">Ghi chú vận hành AI</h4>
+                                            <ul className="space-y-3">
+                                                {[
+                                                    'Người dùng Poodle chiếm ưu thế trong các lượt quét.',
+                                                    'Tỷ lệ chính xác (Confidence) duy trì trên 80%.',
+                                                    'Cao điểm quét diễn ra vào các ngày cuối tuần.'
+                                                ].map((note, i) => (
+                                                    <li key={i} className="flex items-start gap-3 text-sm text-gray-500 font-semibold italic">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                                                        {note}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </Card>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </motion.div>
+                )}
+
+                {currentTab === 'appointments' && (
+                    <motion.div 
+                        key="appointments"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-4"
+                    >
+                        <div className="grid gap-3">
+                            {appointments.length === 0 ? (
+                                <Card className="p-12 text-center text-gray-400 font-bold italic border-2 border-dashed border-cream">Chưa có lịch hẹn nào</Card>
+                            ) : appointments.slice((apptPage - 1) * itemsPerPage, apptPage * itemsPerPage).map(appt => (
+                                <Card key={appt.id} className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <span className="font-fredoka font-bold text-gray-800 group-hover:text-primary transition-colors italic">{appt.customer?.full_name}</span>
+                                            <span className={`px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_COLORS[appt.status]}`}>{appt.status}</span>
+                                        </div>
+                                        <p className="text-sm text-gray-500 font-semibold">
+                                            🐾 {appt.pet?.name} • <span className="text-gray-400">Dịch vụ:</span> {appt.service?.name || 'Dịch vụ'} • {new Date(appt.appointment_date).toLocaleString('vi-VN')}
+                                        </p>
+                                        {appt.customer?.phone_number && <p className="text-xs text-gray-400 mt-1 flex items-center gap-1 opacity-70">📞 {appt.customer.phone_number}</p>}
+                                    </div>
+                                    <div className="flex gap-2 flex-shrink-0">
+                                        {appt.status === 'pending' && (
+                                            <>
+                                                <button onClick={() => updateApptStatus(appt.id, 'confirmed')} className="flex items-center gap-1 px-4 py-2 bg-green-50 text-green-600 font-bold text-xs rounded-xl hover:bg-green-600 hover:text-white transition-all">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" /> Xác nhận
+                                                </button>
+                                                <button onClick={() => updateApptStatus(appt.id, 'cancelled')} className="flex items-center gap-1 px-4 py-2 bg-red-50 text-red-500 font-bold text-xs rounded-xl hover:bg-red-500 hover:text-white transition-all">
+                                                    <XCircle className="w-3.5 h-3.5" /> Hủy
+                                                </button>
+                                            </>
+                                        )}
+                                        {appt.status === 'confirmed' && (
+                                            <button onClick={() => updateApptStatus(appt.id, 'completed')} className="flex items-center gap-1 px-4 py-2 bg-blue-50 text-blue-600 font-bold text-xs rounded-xl hover:bg-blue-600 hover:text-white transition-all">
+                                                <CheckCircle2 className="w-3.5 h-3.5" /> Hoàn thành
+                                            </button>
+                                        )}
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
+                        {/* Pagination Controls */}
+                        {appointments.length > itemsPerPage && (
+                            <div className="flex items-center justify-center gap-4 pt-4 font-bold text-sm text-gray-500">
+                                 <button 
+                                    disabled={apptPage === 1}
+                                    onClick={() => setApptPage(p => p - 1)}
+                                    className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <span className="text-gray-800">Trang {apptPage} / {Math.ceil(appointments.length / itemsPerPage)}</span>
+                                <button 
+                                    disabled={apptPage === Math.ceil(appointments.length / itemsPerPage)}
+                                    onClick={() => setApptPage(p => p + 1)}
+                                    className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
                             </div>
-                        </>
-                    )}
-                </div>
-            )}
+                        )}
+                    </motion.div>
+                )}
 
-            {tab === 'appointments' && (
-                <div className="space-y-4">
-                    <div className="grid gap-3">
-                        {appointments.length === 0 ? (
-                            <Card className="p-12 text-center text-gray-400 font-bold italic border-2 border-dashed border-cream">Chưa có lịch hẹn nào</Card>
-                        ) : appointments.slice((apptPage - 1) * itemsPerPage, apptPage * itemsPerPage).map(appt => (
-                            <Card key={appt.id} className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <span className="font-fredoka font-bold text-gray-800 group-hover:text-primary transition-colors italic">{appt.customer?.full_name}</span>
-                                        <span className={`px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_COLORS[appt.status]}`}>{appt.status}</span>
+                {currentTab === 'orders' && (
+                    <motion.div 
+                        key="orders"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-4"
+                    >
+                        <div className="grid gap-3">
+                            {orders.length === 0 ? (
+                                <Card className="p-12 text-center text-gray-400 font-bold italic border-2 border-dashed border-cream">Chưa có đơn hàng nào</Card>
+                            ) : orders.slice((orderPage - 1) * itemsPerPage, orderPage * itemsPerPage).map(order => (
+                                <Card key={order.id} className="p-5 flex items-center gap-4 hover:shadow-md transition-all group">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <span className="font-bold text-gray-300 text-xs tracking-tighter">#{order.order_number?.split('-')[1]}</span>
+                                            <span className="font-fredoka font-bold text-gray-800 group-hover:text-primary transition-colors italic">{order.customer?.full_name}</span>
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_COLORS[order.status]}`}>{order.status}</span>
+                                        </div>
+                                        <p className="text-sm text-gray-500 font-semibold">
+                                            💰 {Number(order.total_amount).toLocaleString('vi-VN')} đ • <span className="text-gray-400 italic text-xs">{order.delivery_method === 'shipping' ? '🚚 Giao hàng' : '🏪 Nhận tại shop'}</span>
+                                        </p>
+                                        <p className="text-[10px] text-gray-300 mt-1 font-bold">{new Date(order.created_at).toLocaleString('vi-VN')}</p>
                                     </div>
-                                    <p className="text-sm text-gray-500 font-semibold">
-                                        🐾 {appt.pet?.name} • <span className="text-gray-400">Dịch vụ:</span> {appt.service?.name || 'Dịch vụ'} • {new Date(appt.appointment_date).toLocaleString('vi-VN')}
-                                    </p>
-                                    {appt.customer?.phone_number && <p className="text-xs text-gray-400 mt-1 flex items-center gap-1 opacity-70">📞 {appt.customer.phone_number}</p>}
-                                </div>
-                                <div className="flex gap-2 flex-shrink-0">
-                                    {appt.status === 'pending' && (
-                                        <>
-                                            <button onClick={() => updateApptStatus(appt.id, 'confirmed')} className="flex items-center gap-1 px-4 py-2 bg-green-50 text-green-600 font-bold text-xs rounded-xl hover:bg-green-600 hover:text-white transition-all">
-                                                <CheckCircle2 className="w-3.5 h-3.5" /> Xác nhận
-                                            </button>
-                                            <button onClick={() => updateApptStatus(appt.id, 'cancelled')} className="flex items-center gap-1 px-4 py-2 bg-red-50 text-red-500 font-bold text-xs rounded-xl hover:bg-red-500 hover:text-white transition-all">
-                                                <XCircle className="w-3.5 h-3.5" /> Hủy
-                                            </button>
-                                        </>
-                                    )}
-                                    {appt.status === 'confirmed' && (
-                                        <button onClick={() => updateApptStatus(appt.id, 'completed')} className="flex items-center gap-1 px-4 py-2 bg-blue-50 text-blue-600 font-bold text-xs rounded-xl hover:bg-blue-600 hover:text-white transition-all">
-                                            <CheckCircle2 className="w-3.5 h-3.5" /> Hoàn thành
-                                        </button>
-                                    )}
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
-                    {/* Pagination Controls */}
-                    {appointments.length > itemsPerPage && (
-                        <div className="flex items-center justify-center gap-4 pt-4 font-bold text-sm text-gray-500">
-                             <button 
-                                disabled={apptPage === 1}
-                                onClick={() => setApptPage(p => p - 1)}
-                                className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <span className="text-gray-800">Trang {apptPage} / {Math.ceil(appointments.length / itemsPerPage)}</span>
-                            <button 
-                                disabled={apptPage === Math.ceil(appointments.length / itemsPerPage)}
-                                onClick={() => setApptPage(p => p + 1)}
-                                className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {tab === 'orders' && (
-                <div className="space-y-4">
-                    <div className="grid gap-3">
-                        {orders.length === 0 ? (
-                            <Card className="p-12 text-center text-gray-400 font-bold italic border-2 border-dashed border-cream">Chưa có đơn hàng nào</Card>
-                        ) : orders.slice((orderPage - 1) * itemsPerPage, orderPage * itemsPerPage).map(order => (
-                            <Card key={order.id} className="p-5 flex items-center gap-4 hover:shadow-md transition-all group">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <span className="font-bold text-gray-300 text-xs tracking-tighter">#{order.order_number?.split('-')[1]}</span>
-                                        <span className="font-fredoka font-bold text-gray-800 group-hover:text-primary transition-colors italic">{order.customer?.full_name}</span>
-                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${STATUS_COLORS[order.status]}`}>{order.status}</span>
+                                    <div className="flex-shrink-0">
+                                        <select
+                                            value={order.status}
+                                            onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                                            className="text-xs font-bold border-2 border-cream rounded-xl px-4 py-2 bg-white cursor-pointer hover:border-peach focus:border-primary focus:ring-0 outline-none transition-colors"
+                                        >
+                                            {['pending', 'confirmed', 'processing', 'shipping', 'delivered', 'cancelled'].map(s => (
+                                                <option key={s} value={s} className="capitalize">{s}</option>
+                                            ))}
+                                        </select>
                                     </div>
-                                    <p className="text-sm text-gray-500 font-semibold">
-                                        💰 {Number(order.total_amount).toLocaleString('vi-VN')} đ • <span className="text-gray-400 italic text-xs">{order.delivery_method === 'shipping' ? '🚚 Giao hàng' : '🏪 Nhận tại shop'}</span>
-                                    </p>
-                                    <p className="text-[10px] text-gray-300 mt-1 font-bold">{new Date(order.created_at).toLocaleString('vi-VN')}</p>
-                                </div>
-                                <div className="flex-shrink-0">
-                                    <select
-                                        value={order.status}
-                                        onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                        className="text-xs font-bold border-2 border-cream rounded-xl px-4 py-2 bg-white cursor-pointer hover:border-peach focus:border-primary focus:ring-0 outline-none transition-colors"
-                                    >
-                                        {['pending', 'confirmed', 'processing', 'shipping', 'delivered', 'cancelled'].map(s => (
-                                            <option key={s} value={s} className="capitalize">{s}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
-                    {/* Pagination Controls */}
-                    {orders.length > itemsPerPage && (
-                        <div className="flex items-center justify-center gap-4 pt-4 font-bold text-sm text-gray-500">
-                             <button 
-                                disabled={orderPage === 1}
-                                onClick={() => setOrderPage(p => p - 1)}
-                                className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <span className="text-gray-800">Trang {orderPage} / {Math.ceil(orders.length / itemsPerPage)}</span>
-                            <button 
-                                disabled={orderPage === Math.ceil(orders.length / itemsPerPage)}
-                                onClick={() => setOrderPage(p => p + 1)}
-                                className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
+                                </Card>
+                            ))}
                         </div>
-                    )}
-                </div>
-            )}
+                        {/* Pagination Controls */}
+                        {orders.length > itemsPerPage && (
+                            <div className="flex items-center justify-center gap-4 pt-4 font-bold text-sm text-gray-500">
+                                 <button 
+                                    disabled={orderPage === 1}
+                                    onClick={() => setOrderPage(p => p - 1)}
+                                    className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <span className="text-gray-800">Trang {orderPage} / {Math.ceil(orders.length / itemsPerPage)}</span>
+                                <button 
+                                    disabled={orderPage === Math.ceil(orders.length / itemsPerPage)}
+                                    onClick={() => setOrderPage(p => p + 1)}
+                                    className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
 
-            {tab === 'users' && (
-                <div className="space-y-4">
-                    <div className="grid gap-3">
-                        {users.slice((userPage - 1) * itemsPerPage, userPage * itemsPerPage).map(u => (
-                            <Card key={u.id} className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group">
-                                <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400 font-bold">
-                                    {u.full_name?.charAt(0)}
-                                </div>
-                                <div className="flex-1">
-                                    <h4 className="font-fredoka font-bold text-gray-800 italic">{u.full_name}</h4>
-                                    <p className="text-xs text-gray-500 font-semibold">{u.email}</p>
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Vai trò: {u.role}</p>
-                                </div>
-                                <div className="flex-shrink-0">
-                                    <button className="px-4 py-2 border-2 border-cream text-xs font-bold rounded-xl hover:bg-peach transition-colors">Chi tiết</button>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
-                    {/* Pagination Controls */}
-                    {users.length > itemsPerPage && (
-                        <div className="flex items-center justify-center gap-4 pt-4 font-bold text-sm text-gray-500">
-                             <button 
-                                disabled={userPage === 1}
-                                onClick={() => setUserPage(p => p - 1)}
-                                className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <span className="text-gray-800">Trang {userPage} / {Math.ceil(users.length / itemsPerPage)}</span>
-                            <button 
-                                disabled={userPage === Math.ceil(users.length / itemsPerPage)}
-                                onClick={() => setUserPage(p => p + 1)}
-                                className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
+                {currentTab === 'users' && (
+                    <motion.div 
+                        key="users"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-4"
+                    >
+                        <div className="grid gap-3">
+                            {users.slice((userPage - 1) * itemsPerPage, userPage * itemsPerPage).map(u => (
+                                <Card key={u.id} className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group">
+                                    <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400 font-bold">
+                                        {u.full_name?.charAt(0)}
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="font-fredoka font-bold text-gray-800 italic">{u.full_name}</h4>
+                                        <p className="text-xs text-gray-500 font-semibold">{u.email}</p>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Vai trò: {u.role}</p>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                        <button className="px-4 py-2 border-2 border-cream text-xs font-bold rounded-xl hover:bg-peach transition-colors">Chi tiết</button>
+                                    </div>
+                                </Card>
+                            ))}
                         </div>
-                    )}
-                </div>
-            )}
+                        {/* Pagination Controls */}
+                        {users.length > itemsPerPage && (
+                            <div className="flex items-center justify-center gap-4 pt-4 font-bold text-sm text-gray-500">
+                                 <button 
+                                    disabled={userPage === 1}
+                                    onClick={() => setUserPage(p => p - 1)}
+                                    className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <span className="text-gray-800">Trang {userPage} / {Math.ceil(users.length / itemsPerPage)}</span>
+                                <button 
+                                    disabled={userPage === Math.ceil(users.length / itemsPerPage)}
+                                    onClick={() => setUserPage(p => p + 1)}
+                                    className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
 
-            {tab === 'breeds' && (
-                <div className="space-y-4">
-                    <div className="grid gap-3">
-                        {breeds.slice((breedPage - 1) * itemsPerPage, breedPage * itemsPerPage).map(b => (
-                            <Card key={b.id} className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group">
-                                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                                    <Dog className="w-6 h-6" />
-                                </div>
-                                <div className="flex-1">
-                                    <h4 className="font-fredoka font-bold text-gray-800 italic">{b.display_name}</h4>
-                                    <p className="text-xs text-gray-300 font-bold italic">{b.breed_name}</p>
-                                </div>
-                                <div className="px-4 py-2 bg-cream/50 text-xs font-bold rounded-xl">ID: {b.id}</div>
-                            </Card>
-                        ))}
-                    </div>
-                    {/* Pagination Controls */}
-                    {breeds.length > itemsPerPage && (
-                        <div className="flex items-center justify-center gap-4 pt-4 font-bold text-sm text-gray-500">
-                             <button 
-                                disabled={breedPage === 1}
-                                onClick={() => setBreedPage(p => p - 1)}
-                                className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <span className="text-gray-800">Trang {breedPage} / {Math.ceil(breeds.length / itemsPerPage)}</span>
-                            <button 
-                                disabled={breedPage === Math.ceil(breeds.length / itemsPerPage)}
-                                onClick={() => setBreedPage(p => p + 1)}
-                                className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
+                {currentTab === 'breeds' && (
+                    <motion.div 
+                        key="breeds"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-4"
+                    >
+                        <div className="grid gap-3">
+                            {breeds.slice((breedPage - 1) * itemsPerPage, breedPage * itemsPerPage).map(b => (
+                                <Card key={b.id} className="p-5 flex items-center gap-4 hover:shadow-md transition-shadow group">
+                                    <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                                        <Dog className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="font-fredoka font-bold text-gray-800 italic">{b.display_name}</h4>
+                                        <p className="text-xs text-gray-300 font-bold italic">{b.breed_name}</p>
+                                    </div>
+                                    <div className="px-4 py-2 bg-cream/50 text-xs font-bold rounded-xl">ID: {b.id}</div>
+                                </Card>
+                            ))}
                         </div>
-                    )}
-                </div>
-            )}
+                        {/* Pagination Controls */}
+                        {breeds.length > itemsPerPage && (
+                            <div className="flex items-center justify-center gap-4 pt-4 font-bold text-sm text-gray-500">
+                                 <button 
+                                    disabled={breedPage === 1}
+                                    onClick={() => setBreedPage(p => p - 1)}
+                                    className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <span className="text-gray-800">Trang {breedPage} / {Math.ceil(breeds.length / itemsPerPage)}</span>
+                                <button 
+                                    disabled={breedPage === Math.ceil(breeds.length / itemsPerPage)}
+                                    onClick={() => setBreedPage(p => p + 1)}
+                                    className="p-2 disabled:opacity-30 border-2 border-cream rounded-xl hover:bg-peach transition-colors text-primary"
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

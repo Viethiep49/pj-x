@@ -1,7 +1,7 @@
 fastapi==0.128.7
 uvicorn==0.40.0
 python-multipart==0.0.22
-tensorflow
+tensorflow-cpu
 keras
 numpy
 pillow
