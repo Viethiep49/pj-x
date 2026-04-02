@@ -124,7 +124,8 @@ Một số biến môi trường (Environment Variables) quan trọng cần thi�
 - [Cấu trúc Cơ Sở Dữ Liệu (Database Schema)](./docs/database-schema.md)
 
 ---
-
+admin@pawsitive.com
+Pawsitive@2024
 ## 👥 Nhóm Phát Triển (Group 4)
 - **Frontend Dev:** Đảm nhiệm UI, React Context, API Integration
 - **Backend API Dev:** Express Server, CRUD Controllers, Router

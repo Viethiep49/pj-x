@@ -16,9 +16,9 @@ export default function BreedTable({ breeds, onEdit, onDelete }) {
                 >
                     {/* 🖼 HIỂN THỊ ẢNH */}
                     <img
-                        src={b.image_url || "https://via.placeholder.com/300"}
+                        src={b.image_url || "https://placehold.co/300"}
                         alt={b.display_name}
-                        onError={(e) => (e.target.src = "https://via.placeholder.com/300")}
+                        onError={(e) => (e.target.src = "https://placehold.co/300")}
                         className="w-full h-40 object-cover rounded-xl mb-4"
                     />
 

@@ -24,7 +24,7 @@ import {
     PieChart
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
 import Card from '../../components/ui/Card';
 import { 
@@ -35,6 +35,7 @@ import {
     TopBreedsChart
 } from './components/DashboardCharts';
 import AdminQuickActions from './components/AdminQuickActions';
+import ProductPage from '../products/ProductPage';
 
 const AdminDashboard = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -289,6 +290,7 @@ const AdminDashboard = () => {
                 {[
                     { id: 'overview', label: 'Tổng quan', icon: TrendingUp },
                     { id: 'diagnostics', label: 'Chẩn đoán AI 🧠', icon: Sparkles },
+                    { id: 'products', label: 'Sản phẩm', icon: ShoppingBag },
                     { id: 'appointments', label: 'Lịch hẹn', icon: CalendarDays },
                     { id: 'orders', label: 'Đơn hàng', icon: ShoppingBag },
                     { id: 'users', label: 'Khách hàng', icon: Users },
@@ -332,6 +334,18 @@ const AdminDashboard = () => {
                                 <ServiceDistribution appointments={appointments} />
                             </Card>
                         </div>
+                    </motion.div>
+                )}
+                
+                {currentTab === 'products' && (
+                    <motion.div 
+                        key="products"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <ProductPage />
                     </motion.div>
                 )}
 

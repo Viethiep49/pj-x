@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate, Link, useSearchParams } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, Link, useSearchParams, useLocation } from "react-router-dom";
 import { Search, LogOut } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useState, useRef, useEffect } from "react";
@@ -8,7 +8,12 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [searchParams] = useSearchParams();
-  const currentTab = searchParams.get('tab') || 'overview';
+  const { pathname } = useLocation();
+  const currentTab = searchParams.get('tab') || 
+    (pathname.endsWith('/products') ? 'products' : 
+     pathname.endsWith('/breeds') ? 'breeds' : 
+     pathname.endsWith('/orders') ? 'orders' : 
+     pathname.endsWith('/users') ? 'users' : 'overview');
 
   const [open, setOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -54,6 +59,9 @@ export default function AdminLayout() {
           <nav className="space-y-2 text-lg">
             <NavLink to="/admin?tab=overview" className={menuClass('overview')}>
               📊 Tổng quan
+            </NavLink>
+            <NavLink to="/admin/products" className={menuClass('products')}>
+              📦 Sản phẩm
             </NavLink>
             <NavLink to="/admin?tab=orders" className={menuClass('orders')}>
               🧾 Đơn hàng

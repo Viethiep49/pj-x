@@ -16,9 +16,9 @@ export default function ProductTable({ products, onEdit, onDelete }) {
         >
           {/* 🖼 HIỂN THỊ ẢNH */}
           <img
-            src={p.image_url || "https://via.placeholder.com/300"}
+            src={p.image_url || "https://placehold.co/300"}
             alt={p.name}
-            onError={(e) => (e.target.src = "https://via.placeholder.com/300")}
+            onError={(e) => (e.target.src = "https://placehold.co/300")}
             className="w-full h-40 object-cover rounded-xl mb-4"
           />
 
