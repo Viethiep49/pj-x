@@ -13,9 +13,9 @@ const Button = ({ children, variant = 'primary', className = '', ...props }) => 
 
     return (
         <motion.button
-            whileHover={{ y: -4, scale: 1.02, boxShadow: 'var(--tw-shadow-clay-puffy)' }}
-            whileTap={{ y: 0, scale: 0.95, boxShadow: 'var(--tw-shadow-clay-inner)' }}
-            className={`${baseStyles} ${variants[variant]} ${className}`}
+            whileHover={props.disabled ? {} : { y: -4, scale: 1.02, boxShadow: 'var(--tw-shadow-clay-puffy)' }}
+            whileTap={props.disabled ? {} : { y: 0, scale: 0.95, boxShadow: 'var(--tw-shadow-clay-inner)' }}
+            className={`${baseStyles} ${variants[variant]} ${className} disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
             {...props}
         >
             {children}

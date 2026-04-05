@@ -25,7 +25,11 @@ const BookingPage = () => {
 
   useEffect(() => {
     api.get('/services').then(r => setServices(r.data.data)).catch(console.error);
-    api.get('/pets').then(r => setPets(r.data.data)).catch(console.error);
+    api.get('/pets').then(r => {
+      const petList = r.data.data || [];
+      setPets(petList);
+      if (petList.length > 0) setSelectedPet(petList[0]);
+    }).catch(console.error);
   }, []);
 
   useEffect(() => {
