@@ -118,7 +118,7 @@ const LandingPage = () => {
               className="absolute top-0 right-0 w-3/4 aspect-square rounded-blob overflow-hidden shadow-clay-lg border-[16px] border-white z-20"
             >
               <img
-                src="https://loremflickr.com/800/800/dog,spa?lock=100"
+                src="https://images.unsplash.com/photo-1544640808-32ca72ac7f37?w=800&auto=format&fit=crop&q=80"
                 alt="Main Pet Spa"
                 className="w-full h-full object-cover"
                 loading="eager"
@@ -138,7 +138,7 @@ const LandingPage = () => {
               className="absolute bottom-10 left-0 w-1/2 aspect-[4/3] rounded-clay shadow-clay-md border-8 border-white z-30 overflow-hidden"
             >
               <img
-                src="https://loremflickr.com/400/400/pug,pet?lock=101"
+                src="https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?w=400&auto=format&fit=crop&q=80"
                 alt="Small Pet Grooming"
                 className="w-full h-full object-cover"
                 loading="lazy"
@@ -199,27 +199,27 @@ const LandingPage = () => {
         <div className="relative w-full h-[600px] mt-20 flex flex-wrap justify-center items-center gap-8 px-6">
           {[
             {
-              src: "https://loremflickr.com/400/400/dog,smile?lock=102", // Happy Dog
+              src: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=400&auto=format&fit=crop&q=80", // Happy Dog
               rotate: -5,
             },
             {
-              src: "https://loremflickr.com/400/400/pug,towel?lock=103", // Pug in towel
+              src: "https://images.unsplash.com/photo-1525253086316-d0c936c814f8?w=400&auto=format&fit=crop&q=80", // Pug in towel
               rotate: 8,
             },
             {
-              src: "https://loremflickr.com/400/400/shiba?lock=104", // Shiba
+              src: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&auto=format&fit=crop&q=80", // Shiba
               rotate: -12,
             },
             {
-              src: "https://loremflickr.com/400/400/cat,grooming?lock=105", // Cat grooming
+              src: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&auto=format&fit=crop&q=80", // Cat grooming
               rotate: 5,
             },
             {
-              src: "https://loremflickr.com/400/400/cat,towel?lock=106", // Cat in towel
+              src: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=400&auto=format&fit=crop&q=80", // Cat in towel
               rotate: -3,
             },
             {
-              src: "https://loremflickr.com/400/400/dog,running?lock=107", // Running dogs
+              src: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&auto=format&fit=crop&q=80", // Running dogs
               rotate: 10,
             },
           ].map((img, idx) => (
