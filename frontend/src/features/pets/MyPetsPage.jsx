@@ -136,7 +136,7 @@ const PetRecommendations = ({ breedName, petName }) => {
                         </div>
                     ) : recs ? (
                         <div className="space-y-4">
-                            {recs.products?.length > 0 && (
+                            {isArray(recs?.products) && recs.products.length > 0 && (
                                 <div>
                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Sản phẩm khuyên dùng</p>
                                     <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
@@ -273,7 +273,7 @@ const MyPetsPage = () => {
                                             </div>
                                         </div>
                                     )}
-                                    <PetRecommendations breedName={pet.breed} petName={pet.name} />
+                                    {<PetRecommendations breedName={pet.breed} petName={pet.name} />}
                                 </div>
                             </Card>
                         ))}
