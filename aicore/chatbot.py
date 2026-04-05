@@ -1,5 +1,6 @@
 import os
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 env_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -55,17 +56,14 @@ class Chatbot:
             print("Warning: GEMINI_API_KEY not set. Using local knowledge base only.")
         else:
             try:
-                genai.configure(api_key=self.api_key)
-                self.model = genai.GenerativeModel(
-                    model_name='gemini-1.5-flash',
-                    system_instruction=SYSTEM_PROMPT
-                )
+                # Khởi tạo Client theo chuẩn mới
+                self.client = genai.Client(api_key=self.api_key)
                 self.client_ready = True
             except Exception as e:
                 print(f"Error initializing Gemini client: {e}")
 
     async def get_response(self, message: str) -> str:
-        # 1. Try local knowledge base (Keywords)
+        # 1. Try local knowledge base
         message_lower = message.lower()
         for item in KNOWLEDGE_BASE:
             if any(key in message_lower for key in item["keywords"]):
@@ -74,15 +72,21 @@ class Chatbot:
         # 2. Try Gemini AI if ready
         if self.client_ready:
             try:
-                response = self.model.generate_content(message)
+                # Gọi API kiểu mới, đẩy system_instruction vào config
+                response = self.client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=message,
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT
+                    )
+                )
                 return response.text
             except Exception as e:
                 print(f"Gemini API Error: {e}")
                 return "Xin lỗi, tôi đang gặp sự cố kết nối AI. Hãy thử hỏi mình về 'đặt lịch' hoặc 'sức khỏe' nhé! 🐾"
 
-        # 3. Final Default Fallback (Instead of config error)
+        # 3. Final Default Fallback
         return "🐾 Hiện tại mình đang hoạt động ở chế độ ngoại tuyến. Bạn có thể hỏi mình về: đặt lịch hẹn, chăm sóc sức khỏe, hoặc dinh dưỡng cho mèo con nhé!"
-
 
 # Singleton instance
 chatbot = Chatbot()
