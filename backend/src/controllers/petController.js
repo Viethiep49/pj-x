@@ -12,7 +12,6 @@ export const getMyPets = async (req, res, next) => {
                     attributes: ['id', 'appointment_date', 'status', 'notes'],
                     include: [{ model: Service, as: 'service', attributes: ['name', 'price', 'duration_minutes'] }],
                     order: [['appointment_date', 'DESC']],
-                    limit: 5,
                     required: false,
                 },
             ],
