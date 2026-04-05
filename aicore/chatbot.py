@@ -2,7 +2,8 @@ import os
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-load_dotenv()
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(env_path)
 
 SYSTEM_PROMPT = """Bạn là Pawsie 🐾 - AI tư vấn chuyên gia tại Pawsitive Pet Grooming SPA.
 Bạn có kiến thức sâu về:
@@ -25,30 +26,30 @@ Cửa hàng: Pawsitive Pet Grooming SPA | Hotline: 1900-PAWSIT | TP.HCM"""
 class Chatbot:
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
-        self.client = None
+        self.client_ready = False
 
         if not self.api_key:
             print("Warning: GEMINI_API_KEY not set.")
         else:
             try:
-                self.client = genai.Client(api_key=self.api_key)
+                genai.configure(api_key=self.api_key)
+                self.model = genai.GenerativeModel(
+                    model_name='gemini-2.5-flash',
+                    system_instruction=SYSTEM_PROMPT
+                )
+                self.client_ready = True
             except Exception as e:
                 print(f"Error initializing Gemini client: {e}")
 
     async def get_response(self, message: str) -> str:
-        if not self.client:
+        if not self.client_ready:
             return "🐾 Chatbot chưa được cấu hình. Vui lòng liên hệ hotline 1900-PAWSIT!"
 
         try:
-            response = self.client.models.generate_content(
-                model='gemini-2.0-flash',
-                contents=message,
-                config=genai.types.GenerateContentConfig(
-                    system_instruction=SYSTEM_PROMPT,
-                )
-            )
+            response = self.model.generate_content(message)
             return response.text
         except Exception as e:
+            print(f"Gemini API Error: {e}")
             return f"Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại! 🐾"
 
 
