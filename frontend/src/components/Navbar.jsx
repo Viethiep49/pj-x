@@ -30,7 +30,9 @@ const Navbar = () => {
         <motion.div
           initial={{ y: -100 }}
           animate={{ y: 0 }}
-          className="max-w-6xl mx-auto bg-white/80 backdrop-blur-md rounded-full shadow-clay-md border border-white/50 px-8 py-3 flex items-center justify-between"
+          className={`${
+            isHomePage ? "max-w-[1600px]" : "max-w-6xl"
+          } mx-auto bg-white/80 backdrop-blur-md rounded-full shadow-clay-md border border-white/50 px-8 py-3 flex items-center justify-between transition-all duration-500`}
         >
           <div className="flex items-center gap-10">
             <Link 

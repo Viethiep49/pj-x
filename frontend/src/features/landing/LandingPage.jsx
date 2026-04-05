@@ -49,14 +49,14 @@ const LandingPage = () => {
 
 
       {/* Fragmented Hero Section */}
-      <section className="relative pt-40 pb-20">
-        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-center">
+      <section className="relative pt-0 pb-10 lg:pt-0">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-16 items-center">
           {/* Left Concentrated Content */}
-          <div className="lg:col-span-6 space-y-8 text-center lg:text-left">
+          <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
-              className="inline-flex items-center gap-3 px-6 py-2 bg-cream rounded-full shadow-clay-sm text-primary-dark font-bold"
+              className="inline-flex items-center gap-3 px-6 py-2 bg-cream rounded-full shadow-clay-sm text-primary-dark font-bold mb-4"
             >
               <Sparkles className="w-5 h-5 animate-pulse" />
               <span className="font-fredoka">Premium Pet Daycare & Spa</span>
@@ -66,11 +66,11 @@ const LandingPage = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-7xl lg:text-9xl font-fredoka font-bold leading-[1.1] text-gray-800"
+              className="text-6xl lg:text-8xl 2xl:text-[8rem] font-fredoka font-bold leading-[0.95] text-gray-800"
             >
               Happy <br />
               <span className="text-primary text-puffy">Paws,</span> <br />
-              <span className="text-secondary">Kind</span> Hearts
+              <span className="text-secondary leading-none">Kind</span> <span className="inline-block leading-none">Hearts</span>
             </motion.h1>
 
             <motion.p
@@ -183,7 +183,7 @@ const LandingPage = () => {
         id="gallery"
         className="py-32 bg-white/30 relative overflow-hidden h-[900px]"
       >
-        <div className="max-w-7xl mx-auto px-6 relative z-10 pointer-events-none">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 relative z-10 pointer-events-none">
           <div className="text-center space-y-4">
             <h2 className="text-6xl font-fredoka font-bold text-gray-800">
               Happy Clients
@@ -275,7 +275,7 @@ const LandingPage = () => {
           <div className="absolute bottom-1/4 -right-20 w-64 h-64 bg-lavender/20 rounded-full blur-3xl" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 relative z-10">
           <div className="text-center mb-20 space-y-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -392,7 +392,7 @@ const LandingPage = () => {
 
       {/* Task 8, 9: Testimonials & Footer */}
       <section id="reviews" className="py-32 bg-peach/10">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-3 gap-12">
             {[
               {
@@ -451,7 +451,7 @@ const LandingPage = () => {
       </section>
 
       <footer className="py-24 bg-white border-t-8 border-cream">
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-12">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 grid md:grid-cols-4 gap-12">
           <div className="space-y-6">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-clay-sm">
@@ -522,7 +522,7 @@ const LandingPage = () => {
             </div>
           ))}
         </div>
-        <div className="max-w-7xl mx-auto px-6 pt-20 mt-20 border-t border-black/5 text-center text-gray-400 font-bold italic">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 pt-20 mt-20 border-t border-black/5 text-center text-gray-400 font-bold italic">
           © 2024 Pawsitive Pet Spa. Yêu thương trọn vẹn dành cho những người bạn
           thân yêu.
         </div>

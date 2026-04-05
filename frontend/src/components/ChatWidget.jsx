@@ -25,7 +25,7 @@ const ChatWidget = () => {
         setIsLoading(true);
 
         try {
-            const res = await aiApi.post('/chat', { message: userMsg.text });
+            const res = await aiApi.post('/api/ai/chat', { message: userMsg.text });
             setMessages(prev => [...prev, { id: Date.now() + 1, from: 'bot', text: res.data.response }]);
         } catch {
             setMessages(prev => [...prev, { id: Date.now() + 1, from: 'bot', text: 'Xin lỗi, tôi đang gặp sự cố. Hãy thử lại! 🐾' }]);
