@@ -91,7 +91,7 @@ const AdminDashboard = () => {
 
     const updateApptStatus = async (id, status) => {
         try {
-            await api.put(`/appointments/${id}/status`, { status });
+            await api.put(`/appointments/admin/${id}`, { status });
             fetchData();
         } catch (err) {
             console.error(err);
@@ -376,7 +376,7 @@ const AdminDashboard = () => {
                                             <h3 className="text-xl font-fredoka font-bold text-gray-800">Xu hướng nhận diện giống loài (7 ngày qua)</h3>
                                             <div className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase rounded-full tracking-widest animate-pulse">Live AI Feed</div>
                                         </div>
-                                        <AIScanTrendChart data={aiStats.scans.trend} />
+                                        <AIScanTrendChart data={aiStats.scans.daily_trend} />
                                     </Card>
                                     <Card className="p-8 border-none shadow-sm">
                                         <h3 className="text-xl font-fredoka font-bold text-gray-800 mb-6">Độ chính xác trung bình</h3>

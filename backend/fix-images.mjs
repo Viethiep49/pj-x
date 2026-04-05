@@ -8,7 +8,7 @@ const pool = new Pool({
     port: 5432,
     database: 'pet_grooming',
     user: 'postgres',
-    password: '1412Kid@',
+    password: '123',
 });
 
 async function run() {
