@@ -19,6 +19,6 @@ router.post('/login', authLimiter, [
 ], validate, login);
 
 router.get('/me', protect, getMe);
-router.post('/google', googleAuth);
+router.post('/google-login', googleAuth);
 
 export default router;
