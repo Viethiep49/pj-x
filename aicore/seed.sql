@@ -59,8 +59,7 @@ INSERT INTO vaccine_types (name, target_species, description, recommended_age_mo
 ('Vaccine 5-in-1', 'dog', 'Prevents distemper, parvovirus, hepatitis, parainfluenza, and leptospirosis', 2, 21, 3),
 ('Vaccine dại (Rabies)', 'dog', 'Core vaccine for rabies prevention', 3, 365, 1),
 ('Vaccine 3-in-1 (FVRCP)', 'cat', 'Prevents rhinotracheitis, calicivirus, and panleukopenia', 2, 21, 3),
-('Vaccine dại (Rabies Cat)', 'cat', 'Core vaccine for rabies prevention in cats', 3, 365, 1)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name) DO NOTHING;
 
 -- 4. Sample Services
 INSERT INTO services (name, description, price, duration_minutes, target_species) VALUES
@@ -68,7 +67,7 @@ INSERT INTO services (name, description, price, duration_minutes, target_species
 ('Spa & Cắt tỉa trọn gói', 'Tắm spa, cắt tỉa lông theo giống, sấy tạo kiểu', 500000, 120, 'both'),
 ('Khám sức khỏe tổng quát', 'Kiểm tra sức khỏe tổng quát bởi bác sĩ thú y', 150000, 30, 'both'),
 ('Trị ký sinh trùng', 'Tẩy giun, trị ve rận bên trong và bên ngoài', 100000, 20, 'both')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name) DO NOTHING;
 
 -- 5. Sample Accounts (Password for ALL accounts: 'Pawsitive@2024')
 -- Admin
@@ -269,84 +268,84 @@ INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, re
 SELECT b.id, p.id, 'hygiene', 'Giống lông dài cần dầu gội chuyên dụng chống rối', 1
 FROM breeds b, products p
 WHERE b.fur_type = 'long' AND b.species = 'dog' AND p.slug = 'dau-goi-long-dai-biogroom'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, p.id, 'hygiene', 'Lược FURminator giảm rụng lông hiệu quả cho giống lông dài', 2
 FROM breeds b, products p
 WHERE b.fur_type = 'long' AND b.species = 'dog' AND p.slug = 'luoc-go-roi-furminator'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 -- Chó nhỏ (Chihuahua, Pug, Miniature Pinscher...) → Thức ăn chó nhỏ + Áo hoodie
 INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, p.id, 'food', 'Thức ăn hạt nhỏ phù hợp hàm chó nhỏ', 1
 FROM breeds b, products p
 WHERE b.size_category = 'small' AND b.species = 'dog' AND p.slug = 'royal-canin-mini-adult'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, p.id, 'clothing', 'Chó nhỏ dễ lạnh, cần áo giữ ấm khi ra ngoài', 2
 FROM breeds b, products p
 WHERE b.size_category = 'small' AND b.species = 'dog' AND p.slug = 'ao-hoodie-cun-yeu'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 -- Chó lớn → Bóng cao su + Dây thừng
 INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, p.id, 'toy', 'Bóng cao su siêu bền cho giống chó lớn năng động', 1
 FROM breeds b, products p
 WHERE b.size_category = 'large' AND b.species = 'dog' AND p.slug = 'bong-cao-su-kong'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, p.id, 'toy', 'Dây thừng lý tưởng cho chó lớn thích kéo co', 2
 FROM breeds b, products p
 WHERE b.size_category = 'large' AND b.species = 'dog' AND p.slug = 'day-thung-cotton'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 -- Mèo lông dài (Persian, Birman, Maine Coon, Ragdoll) → Dầu gội + Lược
 INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, p.id, 'hygiene', 'Mèo lông dài cần dầu gội chuyên dụng chống rối', 1
 FROM breeds b, products p
 WHERE b.fur_type = 'long' AND b.species = 'cat' AND p.slug = 'dau-goi-long-dai-biogroom'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, p.id, 'hygiene', 'Lược FURminator cần thiết cho mèo lông dài', 2
 FROM breeds b, products p
 WHERE b.fur_type = 'long' AND b.species = 'cat' AND p.slug = 'luoc-go-roi-furminator'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 -- Tất cả mèo → Cần câu lông vũ + Nhà gỗ mèo + Whiskas
 INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, p.id, 'toy', 'Cần câu lông vũ kích thích bản năng săn mồi tự nhiên', 1
 FROM breeds b, products p
 WHERE b.species = 'cat' AND p.slug = 'can-cau-long-vu-meo'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, p.id, 'cage', 'Nhà cây cho mèo leo trèo và nghỉ ngơi', 3
 FROM breeds b, products p
 WHERE b.species = 'cat' AND p.slug = 'nha-go-meo-3-tang'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, p.id, 'food', 'Thức ăn hạt giàu protein phù hợp cho mèo', 1
 FROM breeds b, products p
 WHERE b.species = 'cat' AND p.slug = 'whiskas-ca-ngu'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 -- Tất cả giống → Thuốc nhỏ gáy + Cắt móng + Bandana
 INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, p.id, 'hygiene', 'Phòng ve bọ chét là việc cần thiết cho mọi giống', 5
 FROM breeds b, products p
 WHERE p.slug = 'thuoc-nho-gay-frontline'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 INSERT INTO breed_recommendations (breed_id, product_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, p.id, 'hygiene', 'Cắt móng định kỳ giúp bé cưng thoải mái', 6
 FROM breeds b, products p
 WHERE p.slug = 'bo-cat-mong-pet'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 -- Breed → Service Recommendations (dịch vụ theo giống)
 -- Chó lông dài → Spa trọn gói
@@ -354,11 +353,11 @@ INSERT INTO breed_recommendations (breed_id, service_id, recommendation_type, re
 SELECT b.id, s.id, 'grooming', 'Giống lông dài cần cắt tỉa và chăm sóc chuyên nghiệp', 1
 FROM breeds b, services s
 WHERE b.fur_type = 'long' AND s.name = 'Spa & Cắt tỉa trọn gói'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;
 
 -- Tất cả giống → Tắm vệ sinh cơ bản
 INSERT INTO breed_recommendations (breed_id, service_id, recommendation_type, recommendation_reason, priority)
 SELECT b.id, s.id, 'grooming', 'Tắm và vệ sinh định kỳ cho mọi giống thú cưng', 3
 FROM breeds b, services s
 WHERE s.name = 'Tắm & Vệ sinh cơ bản'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (breed_id, product_id, service_id) DO NOTHING;

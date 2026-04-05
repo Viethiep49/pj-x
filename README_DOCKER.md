@@ -1,6 +1,9 @@
-# 🐳 Hướng dẫn chạy dự án với Docker
 
-Dự án đã được cấu hình để chạy toàn bộ các thành phần (Database, AI Core, Backend, Frontend) trong một môi trường đồng nhất. Điều này giúp tránh hoàn toàn các lỗi về thư viện hoặc phiên bản Node/Python khác nhau giữa các máy.
+1. Tạo 1 file `.env` ở **thư mục gốc ngoài cùng** của dự án (cùng cấp với `docker-compose.yml`).
+2. Nhập API Key của Gemini vào nội dung file như sau:
+   ```env
+   GEMINI_API_KEY=ABCXYZ_Của_Bạn...
+   ```
 
 ## 🚀 Cách khởi động
 
@@ -49,5 +52,3 @@ Sau khi khởi động thành công, bạn có thể truy cập qua:
     docker-compose down -v
     ```
 
-## ⚠️ Lưu ý cho máy yếu
-Quá trình build lần đầu tiên cho **AI Core** có thể mất **5-10 phút** vì Docker cần tải và cài đặt bộ thư viện `tensorflow` (~1GB+). Hãy kiên nhẫn đợi nhé!

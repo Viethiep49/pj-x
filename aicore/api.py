@@ -61,7 +61,7 @@ class ScanResultRequest(BaseModel):
 def home():
     return {"message": "PetAI API is running! Model available at /model/model.json"}
 
-@app.post("/chat")
+@app.post("/api/ai/chat")
 async def chat(request: ChatRequest):
     response = await chatbot.get_response(request.message)
     return {"response": response}
@@ -251,4 +251,5 @@ async def get_analytics():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Using string reference enables hot-reload
+    uvicorn.run("aicore.api:app", host="0.0.0.0", port=8000, reload=True)

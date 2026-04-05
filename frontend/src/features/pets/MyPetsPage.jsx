@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PawPrint, Plus, Pencil, Trash2, X, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { PawPrint, Plus, Pencil, Trash2, X, Sparkles, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -206,70 +206,80 @@ const MyPetsPage = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto py-12 px-6">
-            <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-4xl font-fredoka font-bold text-gray-800">Thú Cưng Của Tôi 🐾</h1>
-                    <p className="text-gray-500 font-semibold mt-1">Quản lý các bé thú cưng của bạn</p>
+        <div className="max-w-5xl mx-auto px-6 py-12">
+            <Card className="min-h-[70vh] p-8 md:p-14 border-none shadow-clay-lg">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                    <div>
+                        <h1 className="text-4xl md:text-5xl font-fredoka font-bold text-gray-800">Thú Cưng Của Tôi 🐾</h1>
+                        <p className="text-gray-500 font-semibold mt-2">Quản lý và chăm sóc các bé yêu của bạn</p>
+                    </div>
+                    <Button onClick={() => { setEditingPet(null); setShowForm(true); }} className="flex items-center gap-2 px-8 py-4 text-lg">
+                        <Plus className="w-6 h-6" /> Thêm thú cưng
+                    </Button>
                 </div>
-                <Button onClick={() => { setEditingPet(null); setShowForm(true); }} className="flex items-center gap-2">
-                    <Plus className="w-5 h-5" /> Thêm thú cưng
-                </Button>
-            </div>
 
-            {loading ? (
-                <div className="text-center py-20 text-gray-400 font-bold">Đang tải dữ liệu...</div>
-            ) : pets.length === 0 ? (
-                <Card className="p-16 text-center">
-                    <PawPrint className="w-16 h-16 text-cream mx-auto mb-4" />
-                    <h3 className="text-2xl font-fredoka font-bold text-gray-600 mb-2">Chưa có thú cưng nào!</h3>
-                    <p className="text-gray-400 font-semibold mb-6">Thêm thú cưng đầu tiên của bạn để bắt đầu nhé</p>
-                    <Button onClick={() => setShowForm(true)}>Thêm thú cưng</Button>
-                </Card>
-            ) : (
-                <div className="grid gap-4">
-                    {pets.map(pet => (
-                        <Card key={pet.id} className="p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
-                            <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-cream">
-                                {pet.image_url ? (
-                                    <img src={pet.image_url} alt={pet.name} className="w-full h-full object-cover" />
-                                ) : (
-                                    <span className="text-4xl">{pet.species === 'dog' ? '🐶' : '🐱'}</span>
-                                )}
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="text-2xl font-fredoka font-bold text-gray-800">{pet.name}</h3>
-                                <div className="flex flex-wrap gap-2 text-sm font-bold text-gray-500 mt-2">
-                                    <span className="capitalize px-2 py-1 bg-cream/50 rounded-md">
-                                        {pet.species === 'dog' ? 'Chó' : 'Mèo'}
-                                    </span>
-                                    {pet.breed && <span className="px-2 py-1 bg-cream/50 rounded-md">Giống: {pet.breed}</span>}
-                                    {pet.age && <span className="px-2 py-1 bg-cream/50 rounded-md">{pet.age} tuổi</span>}
-                                    {pet.weight && <span className="px-2 py-1 bg-cream/50 rounded-md">{pet.weight} kg</span>}
-                                    {pet.gender && <span className="px-2 py-1 bg-cream/50 rounded-md capitalize">
-                                        {pet.gender === 'male' ? 'Đực' : 'Cái'}
-                                    </span>}
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-32 text-gray-400 font-bold gap-4">
+                         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                         Đang tải danh sách...
+                    </div>
+                ) : pets.length === 0 ? (
+                    <div className="py-20 text-center bg-cream/10 rounded-clay border-2 border-dashed border-cream">
+                        <PawPrint className="w-20 h-20 text-cream mx-auto mb-6" />
+                        <h3 className="text-2xl font-fredoka font-bold text-gray-600 mb-2">Chưa có thú cưng nào!</h3>
+                        <p className="text-gray-400 font-semibold mb-8">Hãy thêm thú cưng đầu tiên để nhận được các gợi ý thông minh từ AI nhé</p>
+                        <Button onClick={() => setShowForm(true)} className="px-10">Thêm thú cưng ngay</Button>
+                    </div>
+                ) : (
+                    <div className="grid gap-6">
+                        {pets.map(pet => (
+                            <Card key={pet.id} className="p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-8 bg-cream/5 hover:bg-white border-2 border-transparent hover:border-cream transition-all group">
+                                <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center flex-shrink-0 overflow-hidden border-4 border-white shadow-sm group-hover:scale-105 transition-transform">
+                                    {pet.image_url ? (
+                                        <img src={pet.image_url} alt={pet.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-5xl">{pet.species === 'dog' ? '🐶' : '🐱'}</span>
+                                    )}
                                 </div>
-                                {pet.medical_history && (
-                                    <div className="mt-3 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100 italic">
-                                        <span className="font-bold">Lịch sử y tế/Ghi chú: </span>
-                                        {pet.medical_history}
+                                <div className="flex-1 w-full">
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="text-3xl font-fredoka font-bold text-gray-800">{pet.name}</h3>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => { setEditingPet(pet); setShowForm(true); }} className="p-3 hover:bg-cream rounded-xl transition-colors bg-white shadow-sm border border-cream/50 text-gray-500 hover:text-primary">
+                                                <Pencil className="w-5 h-5" />
+                                            </button>
+                                            <button onClick={() => handleDelete(pet.id)} className="p-3 hover:bg-red-50 rounded-xl transition-colors bg-white shadow-sm border border-cream/50 text-gray-400 hover:text-red-500">
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
+                                        </div>
                                     </div>
-                                )}
-                                <PetRecommendations breedName={pet.breed} petName={pet.name} />
-                            </div>
-                            <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0 justify-end">
-                                <button onClick={() => { setEditingPet(pet); setShowForm(true); }} className="p-3 hover:bg-cream rounded-xl transition-colors bg-white shadow-sm border border-gray-100">
-                                    <Pencil className="w-5 h-5 text-gray-500" />
-                                </button>
-                                <button onClick={() => handleDelete(pet.id)} className="p-3 hover:bg-red-50 rounded-xl transition-colors bg-white shadow-sm border border-gray-100">
-                                    <Trash2 className="w-5 h-5 text-red-500" />
-                                </button>
-                            </div>
-                        </Card>
-                    ))}
-                </div>
-            )}
+                                    <div className="flex flex-wrap gap-2 text-sm font-bold text-gray-500 mt-3">
+                                        <span className="capitalize px-3 py-1.5 bg-white rounded-full shadow-sm">
+                                            {pet.species === 'dog' ? '🐶 Chó' : '🐱 Mèo'}
+                                        </span>
+                                        {pet.breed && <span className="px-3 py-1.5 bg-white rounded-full shadow-sm">Giống: {pet.breed}</span>}
+                                        {pet.age && <span className="px-3 py-1.5 bg-white rounded-full shadow-sm">{pet.age} tuổi</span>}
+                                        {pet.weight && <span className="px-3 py-1.5 bg-white rounded-full shadow-sm">{pet.weight} kg</span>}
+                                        {pet.gender && <span className="px-3 py-1.5 bg-white rounded-full shadow-sm capitalize">
+                                            {pet.gender === 'male' ? 'Đực' : 'Cái'}
+                                        </span>}
+                                    </div>
+                                    {pet.medical_history && (
+                                        <div className="mt-4 text-sm text-amber-700 bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50 italic flex gap-3">
+                                            <AlertCircle className="w-5 h-5 flex-shrink-0 text-amber-500" />
+                                            <div>
+                                                <span className="font-bold block not-italic text-xs uppercase tracking-widest mb-1">Ghi chú y tế</span>
+                                                {pet.medical_history}
+                                            </div>
+                                        </div>
+                                    )}
+                                    <PetRecommendations breedName={pet.breed} petName={pet.name} />
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                )}
+            </Card>
 
             {showForm && (
                 <PetForm

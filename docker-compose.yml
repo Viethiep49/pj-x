@@ -30,6 +30,7 @@ services:
       DB_PASSWORD: 123
       DB_NAME: pet_grooming
       DB_PORT: 5432
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     # aicore phụ thuộc vào database phải khởi động trước
     depends_on:
       db:

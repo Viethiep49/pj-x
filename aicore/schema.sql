@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS products (
 -- 6. Services Table
 CREATE TABLE IF NOT EXISTS services (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
     price DECIMAL(12,2) NOT NULL,
     duration_minutes INTEGER,
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS breed_recommendations (
     recommendation_type VARCHAR(20) NOT NULL CHECK (recommendation_type IN ('food', 'toy', 'clothing', 'cage', 'grooming', 'vaccine', 'hygiene')),
     recommendation_reason TEXT,
     priority INTEGER DEFAULT 0,
-    UNIQUE(breed_id, product_id),
+    UNIQUE(breed_id, product_id, service_id),
     CHECK ((product_id IS NOT NULL AND service_id IS NULL) OR (product_id IS NULL AND service_id IS NOT NULL))
 );
 
@@ -163,7 +163,7 @@ CREATE TABLE IF NOT EXISTS appointments (
 -- 12. Vaccine Types
 CREATE TABLE IF NOT EXISTS vaccine_types (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
     target_species VARCHAR(10) CHECK (target_species IN ('dog', 'cat')),
     description TEXT,
     recommended_age_months INTEGER,

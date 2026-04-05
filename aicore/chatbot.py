@@ -22,6 +22,29 @@ Quy tắc giao tiếp:
 
 Cửa hàng: Pawsitive Pet Grooming SPA | Hotline: 1900-PAWSIT | TP.HCM"""
 
+# Seeded Knowledge Base (Local FAQ) - Used when API key is missing or for common queries
+KNOWLEDGE_BASE = [
+    {
+        "keywords": ["chào", "hi", "hello", "xin chào"],
+        "response": "Gâu! Xin chào! Mình là Pawsie 🐾. Mình có thể giúp gì cho bạn trong việc chăm sóc và làm đẹp cho bé cưng hôm nay?"
+    },
+    {
+        "keywords": ["đặt lịch", "booking", "hẹn", "tắm", "cắt tỉa"],
+        "response": "Bạn muốn làm đẹp cho bé sao? Tuyệt quá! 🛁 Bạn hãy vào mục **'Dịch vụ'** trên ứng dụng để chọn gói spa phù hợp và đặt lịch hẹn nhé. Đội ngũ Pawsitive luôn sẵn sàng đón tiếp!"
+    },
+    {
+        "keywords": ["bỏ ăn", "mệt mỏi", "nôn", "sức khỏe", "ốm", "bệnh"],
+        "response": "Ôi không, bé có vẻ không khỏe sao? 😟 Dựa trên triệu chứng bạn mô tả, bé cún có thể đang gặp vấn đề về tiêu hóa hoặc cảm cúm. **Bạn nên đưa bé đến phòng khám thú y sớm để kiểm tra.** Bạn có thể đặt lịch khám tại Pawsitive để được bác sĩ hỗ trợ nhé! 🐾"
+    },
+    {
+        "keywords": ["mèo con", "ăn gì", "dinh dưỡng", "nhanh lớn", "hạt"],
+        "response": "Với mèo con mới về nhà, bạn nên chú trọng thực phẩm giàu Protein và Canxi. Pawsitive gợi ý dòng **Hạt Royal Canin Mother & Babycat** cực kỳ tốt cho hệ tiêu hóa. Bạn có thể ghé 'Cửa hàng' để mua ngay nhé! 🐱"
+    },
+    {
+        "keywords": ["poodle", "thông minh", "giống chó"],
+        "response": "Poodle là giống chó cực kỳ thông minh và đặc biệt là không rụng lông, rất phù hợp ở chung cư. Tuy nhiên, Poodle cần được chải lông hằng ngày để tránh bết rối. Đừng quên đặt lịch spa định kỳ cho bé tại Pawsitive nhé! 🐩"
+    }
+]
 
 class Chatbot:
     def __init__(self):
@@ -29,12 +52,12 @@ class Chatbot:
         self.client_ready = False
 
         if not self.api_key:
-            print("Warning: GEMINI_API_KEY not set.")
+            print("Warning: GEMINI_API_KEY not set. Using local knowledge base only.")
         else:
             try:
                 genai.configure(api_key=self.api_key)
                 self.model = genai.GenerativeModel(
-                    model_name='gemini-2.5-flash',
+                    model_name='gemini-1.5-flash',
                     system_instruction=SYSTEM_PROMPT
                 )
                 self.client_ready = True
@@ -42,15 +65,23 @@ class Chatbot:
                 print(f"Error initializing Gemini client: {e}")
 
     async def get_response(self, message: str) -> str:
-        if not self.client_ready:
-            return "🐾 Chatbot chưa được cấu hình. Vui lòng liên hệ hotline 1900-PAWSIT!"
+        # 1. Try local knowledge base (Keywords)
+        message_lower = message.lower()
+        for item in KNOWLEDGE_BASE:
+            if any(key in message_lower for key in item["keywords"]):
+                return item["response"]
 
-        try:
-            response = self.model.generate_content(message)
-            return response.text
-        except Exception as e:
-            print(f"Gemini API Error: {e}")
-            return f"Xin lỗi, tôi đang gặp sự cố. Vui lòng thử lại! 🐾"
+        # 2. Try Gemini AI if ready
+        if self.client_ready:
+            try:
+                response = self.model.generate_content(message)
+                return response.text
+            except Exception as e:
+                print(f"Gemini API Error: {e}")
+                return "Xin lỗi, tôi đang gặp sự cố kết nối AI. Hãy thử hỏi mình về 'đặt lịch' hoặc 'sức khỏe' nhé! 🐾"
+
+        # 3. Final Default Fallback (Instead of config error)
+        return "🐾 Hiện tại mình đang hoạt động ở chế độ ngoại tuyến. Bạn có thể hỏi mình về: đặt lịch hẹn, chăm sóc sức khỏe, hoặc dinh dưỡng cho mèo con nhé!"
 
 
 # Singleton instance
