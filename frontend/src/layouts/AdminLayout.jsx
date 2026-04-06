@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate, Link, useSearchParams, useLocation } from
 import { Search, LogOut } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useState, useRef, useEffect } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
