@@ -103,6 +103,16 @@ run_project.bat
 
 ---
 
+## 📊 Database Design (ERD)
+
+Sơ đồ quan hệ thực thể (Entity Relationship Diagram) minh họa cấu trúc dữ liệu gồm 15 bảng liên kết chặt chẽ trong hệ thống Pawsitive:
+
+<p align="center">
+  <img src="docs/ERD.png" alt="Pawsitive ERD Diagram" width="900" style="border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+</p>
+
+---
+
 ## ⚙️ Configuration
 
 Một số biến môi trường (Environment Variables) quan trọng cần thiết lập trong file `.env` ở thư mục `backend/`:
